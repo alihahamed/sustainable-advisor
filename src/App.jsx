@@ -85,11 +85,13 @@ function App() {
   };
 
   const stopScanning = () => {
+    console.log('Scanning stopped');
     if (scannerRef.current && isScanning.current) {
       scannerRef.current.clear().catch(console.error);
       scannerRef.current = null;
       isScanning.current = false;
     }
+    
   };
 
   const fetchProductInfo = async (barcode) => {
@@ -145,7 +147,7 @@ function App() {
 
     stopScanning();
 
-    
+    // console.log(enhancedData)
     fetchProductInfo(decodedText);
   };
 

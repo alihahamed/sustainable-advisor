@@ -1,55 +1,66 @@
-// Carbon Interface API service for transportation emissions
+// Climatiq API service for transportation emissions
 
-const CARBON_INTERFACE_API_KEY = import.meta.env.VITE_CARBON_INTERFACE_API_KEY || 'lDKCoYDPfnBSUtOgNisg'; 
+const CLIMATIQ_API_KEY = import.meta.env.VITE_CLIMATIQ_API_KEY
+const CLIMATIQ_BASE_URL = 'https://api.climatiq.io';
 
-export async function getTransportationEmissions(origin, destination, weightKg = 1, productType = 'food') {
+export async function getTransportationEmissions(origin, destination, weightKg = 1, productType = 'food') { // eslint-disable-line no-unused-vars
   try {
-    const baseUrl = 'https://www.carboninterface.com/api/v1';
-    const endpoint = '/estimates';
+    if (!CLIMATIQ_API_KEY) {
+      console.warn('No Climatiq API key found, using fallback calculations');
+      return calculateFallbackEmission(origin, destination, weightKg);
+    }
+
+    const distance = getApproximateDistance(origin, destination);
+    const activityId = selectActivityId(origin, destination, distance);
 
     const requestBody = {
-      type: 'shipping',
-      weight_value: weightKg,
-      weight_unit: 'kg',
-      route: {
-        origin_address: origin,      // Example: "Italy"
-        destination_address: destination  // Example: "France"
+      emission_factor: {
+        activity_id: activityId,
+        data_version: "^26"
       },
-      vehicle_type: 'truck'  // Let API choose: truck for short haul, ocean for long
+      parameters: {
+        weight: 80,
+        weight_unit: "t",
+        distance: distance,
+        distance_unit: "km"
+      }
     };
 
-    console.log('Carbon Interface Request:', requestBody);
+    console.log('Climatiq Request:', requestBody);
 
-    const response = await fetch(`${baseUrl}${endpoint}`, {
+    const response = await fetch(`${CLIMATIQ_BASE_URL}/estimate`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${CARBON_INTERFACE_API_KEY}`,
+        'Authorization': `Bearer ${CLIMATIQ_API_KEY}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
-      // For demo purposes, don't throw errors - just return fallback
-      console.warn(`Carbon Interface API: ${response.status} - using fallback`);
-      // throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      console.warn(`Climatiq API: ${response.status} - ${response.statusText}`);
+      const errorData = await response.text();
+      console.warn('Climatiq API Error:', errorData);
+      // Use fallback for now
+      return calculateFallbackEmission(origin, destination, weightKg);
     }
 
     const data = await response.json();
-    console.log('Carbon Interface Response:', data);
+    console.log('Climatiq Response:', data);
 
     return {
-      co2_kg: data.data.attributes.carbon_kg,
-      distance_km: data.data.attributes.distance_value,
-      transport_method: data.data.attributes.transport_method || 'mixed',
+      co2_kg: data.co2e,
+      distance_km: distance,
+      transport_method: getTransportMethodFromResponse(activityId),
       origin: origin,
       destination: destination,
-      confidence: 'high',
-      source: 'Carbon Interface API'
+      confidence: data.uncertainty < 0.3 ? 'high' : data.uncertainty < 0.6 ? 'medium' : 'low',
+      source: 'Climatiq API',
+      source_details: data.emission_factor?.source
     };
 
   } catch {
-    console.error('Carbon Interface API Error occurred');
+    console.error('Climatiq API Error occurred');
 
     // Return fallback data when API fails
     return {
@@ -222,6 +233,44 @@ export function deriveProductOrigin(productData) {
 
   // Strategy 3: Default
   return 'Europe';
+}
+
+// Helper functions for Climatiq API
+function selectActivityId(origin, destination, distanceKm) {
+  // Climatiq v26.26 specific activity IDs provided by user
+  if (distanceKm > 5000) {
+    // Sea freight for long international routes (Europe to Asia/India)
+    return "sea_freight-vessel_type_container_ship-route_type_na-vessel_length_na-tonnage_na-fuel_source_na";
+  } else if (distanceKm > 2000) {
+    // Heavy goods vehicle for medium distances
+    return "freight_vehicle-vehicle_type_truck_medium_or_heavy-fuel_source_na-vehicle_weight_na-percentage_load_na";
+  } else {
+    // Commercial truck for shorter routes
+    return "freight_vehicle-vehicle_type_commercial_truck-fuel_source_na-vehicle_weight_na-percentage_load_na";
+  }
+}
+
+function getCountryCode(countryName) {
+  const countryMap = {
+    'France': 'FR',
+    'Germany': 'DE',
+    'Italy': 'IT',
+    'India': 'IN',
+    'USA': 'US',
+    'China': 'CN',
+    'Netherlands': 'NL',
+    'Belgium': 'BE',
+    'Switzerland': 'CH',
+    'Spain': 'ES',
+    'United Kingdom': 'GB'
+  };
+  return countryMap[countryName] || countryName;
+}
+
+function getTransportMethodFromResponse(activityId) {
+  if (activityId.startsWith('sea_freight')) return 'sea';
+  if (activityId.startsWith('freight_vehicle')) return 'truck';
+  return 'mixed';
 }
 
 // Export utility functions for other services
