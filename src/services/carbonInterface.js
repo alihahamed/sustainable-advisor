@@ -7,72 +7,78 @@ export async function getTransportationEmissions(origin, destination, weightKg =
   try {
     if (!CLIMATIQ_API_KEY) {
       console.warn('No Climatiq API key found, using fallback calculations');
-      return calculateFallbackEmission(origin, destination, weightKg);
+      return calculateProductPortionEmission(origin, destination, weightKg);
     }
 
     const distance = getApproximateDistance(origin, destination);
     const activityId = selectActivityId(origin, destination, distance);
 
-    const requestBody = {
-      emission_factor: {
-        activity_id: activityId,
-        data_version: "^26"
-      },
-      parameters: {
-        weight: 80,
-        weight_unit: "t",
-        distance: distance,
-        distance_unit: "km"
-      }
-    };
+    // Use realistic shipment size (not 10 tonnes!)
+    const shipmentTons = getShipmentSize(distance);
+    const shipmentCo2 = await getShipmentEmission(activityId, shipmentTons, distance);
 
-    console.log('Climatiq Request:', requestBody);
-
-    const response = await fetch(`${CLIMATIQ_BASE_URL}/estimate`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CLIMATIQ_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
-
-    if (!response.ok) {
-      console.warn(`Climatiq API: ${response.status} - ${response.statusText}`);
-      const errorData = await response.text();
-      console.warn('Climatiq API Error:', errorData);
-      // Use fallback for now
-      return calculateFallbackEmission(origin, destination, weightKg);
-    }
-
-    const data = await response.json();
-    console.log('Climatiq Response:', data);
+    // Calculate product's portion of the shipment
+    const productTons = weightKg / 1000; // Convert to tonnes
+    const productPortion = Math.min(productTons / shipmentTons, 0.05); // Max 5% of shipment
+    const productCo2 = shipmentCo2 * productPortion;
 
     return {
-      co2_kg: data.co2e,
+      co2_kg: Math.max(productCo2, 0.001), // At least 1g CO2
       distance_km: distance,
       transport_method: getTransportMethodFromResponse(activityId),
       origin: origin,
       destination: destination,
-      confidence: data.uncertainty < 0.3 ? 'high' : data.uncertainty < 0.6 ? 'medium' : 'low',
-      source: 'Climatiq API',
-      source_details: data.emission_factor?.source
+      confidence: 'medium',
+      source: 'Climatiq API (per-product allocation)',
+      shipment_size_tons: shipmentTons,
+      product_portion_percent: (productPortion * 100).toFixed(6)
     };
 
   } catch {
     console.error('Climatiq API Error occurred');
 
     // Return fallback data when API fails
-    return {
-      co2_kg: calculateFallbackEmission(origin, destination, weightKg),
-      distance_km: getApproximateDistance(origin, destination),
-      transport_method: 'estimated',
-      origin: origin,
-      destination: destination,
-      confidence: 'estimated',
-      source: 'Fallback calculation'
-    };
+    return calculateProductPortionEmission(origin, destination, weightKg);
   }
+}
+
+// Get appropriate shipment size based on distance and route
+function getShipmentSize(distanceKm) {
+  if (distanceKm > 5000) return 24000; // Sea container: 24,000 tonnes
+  if (distanceKm > 1500) return 20000; // Road/train container: 20,000 tonnes
+  return 18000; // Local truck: 18,000 tonnes
+}
+
+// Get total shipment emission (standalone API call)
+async function getShipmentEmission(activityId, shipmentTons, distance) {
+  const response = await fetch(`${CLIMATIQ_BASE_URL}/estimate`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${CLIMATIQ_API_KEY}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      emission_factor: {
+        activity_id: activityId,
+        data_version: "^26"
+      },
+      parameters: {
+        weight: shipmentTons,
+        weight_unit: "t",
+        distance: distance,
+        distance_unit: "km"
+      }
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Shipment API failed: ${response.status}`);
+  }
+
+  const data = await response.json();
+  console.log(data)
+  return data.co2e; // Total shipment CO2
+  
 }
 
 // Fallback calculations when API is unavailable - improved for realistic values
@@ -243,10 +249,10 @@ function selectActivityId(origin, destination, distanceKm) {
     return "sea_freight-vessel_type_container_ship-route_type_na-vessel_length_na-tonnage_na-fuel_source_na";
   } else if (distanceKm > 2000) {
     // Heavy goods vehicle for medium distances
-    return "freight_vehicle-vehicle_type_truck_medium_or_heavy-fuel_source_na-vehicle_weight_na-percentage_load_na";
+    return "freight_vehicle-vehicle_type_truck-freight_category_refrigerated-smartway_co2_rank_4";
   } else {
     // Commercial truck for shorter routes
-    return "freight_vehicle-vehicle_type_commercial_truck-fuel_source_na-vehicle_weight_na-percentage_load_na";
+    return "freight_vehicle-vehicle_type_truck-freight_category_refrigerated-smartway_co2_rank_4";
   }
 }
 
@@ -267,10 +273,82 @@ function getCountryCode(countryName) {
   return countryMap[countryName] || countryName;
 }
 
+// Calibrate API emissions to realistic transportation values
+function calibrateEmission(apiCo2kg, productWeightKg, distanceKm, activityId) {
+  // Skip calibration if API result is already reasonable
+  const tonneKm = (10 * distanceKm) / 1000; // 10 tonnes (representing load)
+  const emissionPerTonneKm = apiCo2kg / tonneKm;
+
+  // Realistic baseline ranges (kg CO2 per tonne-km)
+  const realisticRanges = {
+    'sea': { min: 0.004, max: 0.012 },  // 4-12g per tonne-km
+    'truck': { min: 0.030, max: 0.100 }, // 30-100g per tonne-km
+    'rail': { min: 0.015, max: 0.035 }  // 15-35g per tonne-km
+  };
+
+  const transportType = getTransportMethodFromResponse(activityId);
+  const range = realisticRanges[transportType] || realisticRanges.truck;
+
+  // If emission is within realistic range, return as-is
+  if (emissionPerTonneKm >= range.min && emissionPerTonneKm <= range.max) {
+    return apiCo2kg;
+  }
+
+  // Apply calibration factor to bring into realistic range
+  let correctionFactor = 1.0;
+
+  if (emissionPerTonneKm > range.max * 1.5) {
+    // Way too high - apply strong downward correction
+    correctionFactor = Math.max(0.1, range.max / emissionPerTonneKm);
+  } else if (emissionPerTonneKm < range.min) {
+    // Too low - slight upward correction
+    correctionFactor = range.min / emissionPerTonneKm;
+  }
+
+  const calibrated = apiCo2kg * correctionFactor;
+
+  console.log(`Emission calibrated: ${apiCo2kg.toFixed(2)}kg → ${calibrated.toFixed(2)}kg (factor: ${correctionFactor.toFixed(2)})`);
+
+  return Math.max(calibrated, 0.01); // Ensure at least 0.01kg minimum
+}
+
 function getTransportMethodFromResponse(activityId) {
   if (activityId.startsWith('sea_freight')) return 'sea';
   if (activityId.startsWith('freight_vehicle')) return 'truck';
   return 'mixed';
+}
+
+// Fallback for when API is not available
+function calculateProductPortionEmission(origin, destination, weightKg) {
+  const distance = getApproximateDistance(origin, destination);
+  const transportMode = determineBestTransportMode(origin, destination);
+
+  // Realistic shipment sizes
+  const shipmentSizes = {
+    'truck': 18000,  // 18 tonnes
+    'rail': 20000,   // 20 tonnes
+    'sea': 24000     // 24 tonnes
+  };
+
+  const shipmentTons = shipmentSizes[transportMode] || 18000;
+  const shipmentCo2 = calculateFallbackEmission(origin, destination, shipmentTons * 1000);
+
+  // Calculate product's portion
+  const productTons = weightKg / 1000;
+  const productPortion = Math.min(productTons / shipmentTons, 0.05);
+  const productCo2 = shipmentCo2 * productPortion;
+
+  return {
+    co2_kg: Math.max(productCo2, 0.001),
+    distance_km: distance,
+    transport_method: transportMode,
+    origin: origin,
+    destination: destination,
+    confidence: 'estimated',
+    source: 'Fallback calculation',
+    shipment_size_tons: shipmentTons,
+    product_portion_percent: (productPortion * 100).toFixed(6)
+  };
 }
 
 // Export utility functions for other services
