@@ -1,3 +1,5 @@
+
+
 // Open Food Facts API service
 
 const OFF_BASE_URL = 'https://world.openfoodfacts.net/api/v2';
@@ -23,7 +25,7 @@ export async function getProductData(barcode) {
       code: product.code,
       name: product.product_name || 'Unknown Product',
       brand: product.brands || '',
-      category: product.categories_hierarchy?.[0] || product.categories || '',
+      category: getFirstThreeCategories(product.categories_hierarchy || product.categories),
       country: product.countries_tags?.[0]?.replace('en:', '') || '',
 
       // Nutritional info
@@ -55,6 +57,28 @@ export async function getProductData(barcode) {
     console.error('Open Food Facts API Error:', error);
     throw new Error(`Failed to fetch product data: ${error.message}`);
   }
+}
+
+function getFirstThreeCategories(categories) {
+  if (!categories) return '';
+
+  // Handle if categories is an array (categories_hierarchy) or string
+  let categoryArray = [];
+  if (Array.isArray(categories)) {
+    categoryArray = categories;
+  } else if (typeof categories === 'string') {
+    categoryArray = categories.split(',')
+      .map(cat => cat.trim())
+      .filter(cat => cat.length > 0);
+  }
+
+  // Clean up category names (remove en: prefixes)
+  const cleanCategories = categoryArray
+    .map(cat => cat.replace('en:', '').replace('fr:', '').trim())
+    .filter(cat => cat.length > 0);
+
+  // Take first 3 categories and join them back
+  return cleanCategories.slice(0, 4).join(', ');
 }
 
 // Extract product weight in kg
@@ -139,4 +163,195 @@ export async function searchByCategory(category, page = 1) {
     console.error('Search by category failed:', error);
     return [];
   }
+}
+
+// Find sustainable alternatives using AI (with OFF fallback)
+export async function findSustainableAlternatives(productData, limit = 5) {
+  try {
+    console.log(`🤖 Requesting AI alternatives for: "${productData.name}"`);
+
+    // Call the AI endpoint first
+    const response = await fetch('http://localhost:3001/api/alternatives/ai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        productData: productData,
+        limit: limit
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`AI Alternatives API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    if (data.success && data.alternatives) {
+      console.log(`🎯 Found ${data.alternatives.length} ${data.source === 'AI' ? 'AI-generated' : 'database'} sustainable alternatives`);
+      return data.alternatives.slice(0, limit);
+    }
+
+    throw new Error(data.error || 'Unknown error from alternatives API');
+
+  } catch (error) {
+    console.error('❌ AI alternatives failed:', error.message);
+
+    // Fallback to direct OFF search
+    console.log('🔄 Falling back to direct OFF search...');
+    return await findSustainableAlternativesOFF(productData, limit);
+  }
+}
+
+// Fallback: Search Open Food Facts database directly
+async function findSustainableAlternativesOFF(productData, limit = 5) {
+  try {
+    const currentGrade = productData.nutriscore_grade?.toLowerCase();
+    const currentScore = productData.nutriscore_score;
+    const category = productData.category;
+
+    if (!category) {
+      console.log('No category available for alternatives search');
+      return [];
+    }
+
+    console.log(`Searching OFF alternatives for category: "${category}"`);
+
+    // Get better grades to search for
+    const betterGrades = getBetterGrades(currentGrade);
+    if (betterGrades.length === 0) {
+      console.log(`Product already has best grade: ${currentGrade}`);
+      return [];
+    }
+
+    // Build OR query for better nutrition grades
+    const gradeQueries = betterGrades.map(grade => `nutrition_grades_tags=${grade}`).join('&');
+
+    // Search for better alternatives in same category using OFF API format
+    const globalCountries = 'countries_tags_en=united-states|united-kingdom|canada|india|pakistan|australia|spain|brazil';
+
+    const queryParams = [
+      `categories_tags_en=${encodeURIComponent(category)}`,
+      gradeQueries,
+      globalCountries,
+      'fields=code,product_name,nutriscore_grade,nutriscore_score,ecoscore_grade,ecoscore_score,image_front_url,labels_tags,energy-kj_100g,sugars_100g,salt_100g,categories_tags_en',
+      'sort_by=popularity',
+      `page_size=${Math.min(limit * 2, 20)}`, // Get more results to filter
+      'page=1'
+    ].join('&');
+
+    console.log(`Alternatives OFF query: ${OFF_BASE_URL}/search?${queryParams}`);
+
+    const response = await fetch(`${OFF_BASE_URL}/search?${queryParams}`);
+
+    if (!response.ok) {
+      throw new Error(`Search API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const alternatives = data.products || [];
+
+    // Filter and sort alternatives by improvement score
+    const scoredAlternatives = alternatives
+      .filter(product => product.product_name && product.code)
+      .map(alternative => ({
+        ...alternative,
+        improvement_score: calculateImprovementScore(
+          currentScore,
+          currentGrade,
+          alternative.nutriscore_score,
+          alternative.nutriscore_grade
+        ),
+        benefits: analyzeBenefits(productData, alternative),
+        is_organic: alternative.labels_tags?.some(tag => tag.includes('organic') || tag.includes('bio')),
+        is_fair_trade: alternative.labels_tags?.some(tag => tag.includes('fair-trade'))
+      }))
+      .sort((a, b) => b.improvement_score - a.improvement_score)
+      .slice(0, limit);
+
+    console.log(`Found ${scoredAlternatives.length} OFF database alternatives for ${productData.name}`);
+    return scoredAlternatives;
+
+  } catch (error) {
+    console.error('OFF Alternatives search failed:', error);
+    return [];
+  }
+}
+
+// Get grades that are better than current grade
+function getBetterGrades(currentGrade) {
+  const gradeRanking = { 'e': 1, 'd': 2, 'c': 3, 'b': 4, 'a': 5 };
+  const currentLevel = gradeRanking[currentGrade] || 0;
+
+  return Object.entries(gradeRanking)
+    .filter(([, level]) => level > currentLevel)
+    .map(([grade]) => grade);
+}
+
+// Calculate improvement score for ranking alternatives
+function calculateImprovementScore(currentScore, currentGrade, altScore, altGrade) {
+  const gradePoints = { 'e': 1, 'd': 2, 'c': 3, 'b': 4, 'a': 5 };
+
+  // Base grade improvement (0-4 points)
+  const currentGradeNum = gradePoints[currentGrade] || 1;
+  const altGradeNum = gradePoints[altGrade] || 1;
+  const gradeImprovement = Math.max(0, altGradeNum - currentGradeNum);
+
+  // Score improvement (0-20 points, scaled to grade difference)
+  const scoreDiff = (altScore - (currentScore || 0)) / 5;
+  const scoreBonus = Math.max(0, Math.min(scoreDiff, 20)); // Cap at 20 points
+
+  return gradeImprovement + scoreBonus;
+}
+
+// Analyze specific benefits of alternative vs current product
+function analyzeBenefits(current, alternative) {
+  const benefits = [];
+
+  // Nutrition improvements
+  if ((alternative.nutriscore_score || 0) > (current.nutriscore_score || 0)) {
+    benefits.push({ type: 'nutrition', text: 'Better nutritional score', icon: '🥗' });
+  }
+
+  // Grade improvements
+  if (gradeBetter(current.nutriscore_grade, alternative.nutriscore_grade)) {
+    benefits.push({ type: 'grade', text: `${alternative.nutriscore_grade.toUpperCase()} grade`, icon: '⭐' });
+  }
+
+  // Lower sugar
+  if (alternative.sugars_100g && current.sugars_100g &&
+      alternative.sugars_100g < current.sugars_100g * 0.8) {
+    benefits.push({ type: 'sugar', text: 'Lower sugar content', icon: '🎯' });
+  }
+
+  // Lower energy
+  if (alternative['energy-kj_100g'] && current['energy-kj_100g'] &&
+      alternative['energy-kj_100g'] < current['energy-kj_100g'] * 0.9) {
+    benefits.push({ type: 'calories', text: 'Lower calorie content', icon: '⚡' });
+  }
+
+  // Certifications
+  if (alternative.is_organic) {
+    benefits.push({ type: 'organic', text: 'Organic certified', icon: '🌱' });
+  }
+
+  if (alternative.is_fair_trade) {
+    benefits.push({ type: 'fair_trade', text: 'Fair trade certified', icon: '🤝' });
+  }
+
+  // Eco score if available
+  if (alternative.ecoscore_score && (!current.eco_score || alternative.ecoscore_score > current.eco_score)) {
+    benefits.push({ type: 'eco', text: 'Better eco-score', icon: '♻️' });
+  }
+
+  return benefits;
+}
+
+
+
+// Check if grade A is better than grade B
+function gradeBetter(gradeA, gradeB) {
+  const grades = { 'a': 5, 'b': 4, 'c': 3, 'd': 2, 'e': 1 };
+  return (grades[gradeB?.toLowerCase()] || 0) > (grades[gradeA?.toLowerCase()] || 0);
 }
