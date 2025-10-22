@@ -374,7 +374,7 @@ function ProductDetails() {
       </motion.div>
 
       <motion.div
-        className="max-w-md mx-auto bg-white border-4 border-black rotate-1 flex-1 flex flex-col"
+        className="max-w-md mx-auto bg-white border-4 border-black  flex-1 flex flex-col"
         style={{ boxShadow: '16px 16px 0px #000' }}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
