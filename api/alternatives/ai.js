@@ -1,7 +1,7 @@
 // SustainScan Backend API - Gemini AI Alternatives Endpoint
 // Deployed as Vercel Serverless Function
 
-const { GoogleGenAI, Type } = require('@google/genai');
+import { GoogleGenAI, Type } from '@google/genai';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
