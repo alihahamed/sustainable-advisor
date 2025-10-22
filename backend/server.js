@@ -331,7 +331,9 @@ app.post('/api/alternatives/ai', async (req, res) => {
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: `You are a sustainability expert. Find 4-6 sustainable alternatives for ${productData.name} that are nutritionally better. The alternatives brand should be based on what a customer in a supermarket would be able to find. The brand should be primarily indian. In the alternatives give the brand name as well as the product name. Return the packaging type of the product that you're suggesting (eg: 'plastic', 'paper', 'glass' etc. Keep it a single word). The nutrients should be in this format particularly fat: high, salt: low, sugar: high, saturated-fat:high and give the ingredients too, packaging that you are gonna give should be better than ${productData.nutrients}, ${productData.ingredients}, ${productData.packaging}. Also Return vegan products`,
+        contents: `You are a sustainability expert. Find 4-5 sustainable alternatives for ${productData.name} that are nutritionally better. The alternatives brand should be based on what a customer in a supermarket would be able to find. The brand should be primarily indian. In the alternatives give the brand name as well as the product name. Return the packaging type of the product that you're suggesting (eg: 'plastic', 'paper', 'glass' etc. Keep it a single word). The nutrients should be in this format particularly fat: high, salt: low, sugar: high, saturated-fat:high and give the ingredients too, packaging that you are gonna give should be better than ${productData.nutrients}, ${productData.ingredients}, ${productData.packaging}. Also Return vegan products
+        Also give a nutriscore grade based on the sustainability of the product you are suggesting.
+        `,
         config: {
           thinkingConfig: {
             thinkingBudget: 1024,
@@ -365,9 +367,12 @@ app.post('/api/alternatives/ai', async (req, res) => {
                 },
                 vegan: {
                   type: Type.BOOLEAN,
+                },
+                nutriscore_grade: {
+                  type: Type.STRING,
                 }
               },
-              propertyOrdering: ["alternatives", "nutrients", "ingredients", "packaging", "vegan"],
+              propertyOrdering: ["alternatives", "nutrients", "ingredients", "packaging", "vegan", "nutriscore_grade"],
             },
           },
         },
@@ -389,7 +394,7 @@ app.post('/api/alternatives/ai', async (req, res) => {
           ingredients: item.ingredients,
           packaging: item.packaging,
           vegan: item.vegan,
-          nutriscore_grade: 'b',
+          nutriscore_grade: item.nutriscore_grade,
           improvement_score: 5 + (item.packaging === 'glass' ? 2 : 0),
           image_front_url: null
         };

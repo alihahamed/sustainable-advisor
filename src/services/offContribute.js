@@ -7,7 +7,7 @@ export async function contributeMissingData(barcode, contributionData) {
   try {
     console.log('📤 Sending contribution to backend:', { barcode, contributionData });
 
-    const response = await fetch('http://localhost:3001/api/contribute/off', {
+    const response = await fetch('/api/contribute/off', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

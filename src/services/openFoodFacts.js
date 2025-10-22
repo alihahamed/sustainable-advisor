@@ -1,4 +1,5 @@
 
+import { TreePalm } from "lucide-react";
 
 // Open Food Facts API service
 
@@ -21,6 +22,7 @@ export async function getProductData(barcode) {
     const product = data.product;
 
     console.log('product.nutriments:', product.nutriments);
+    console.log('product.ingredients_tags:', product.ingredients_tags);
 
     const result = {
       // Basic info
@@ -41,6 +43,7 @@ export async function getProductData(barcode) {
         proteins: product.nutriments?.proteins,
         fat: product.nutriments?.fat,
         carbohydrates: product.nutriments?.carbohydrates,
+        sugar:product.nutriments?.sugars
       },
 
       // Packaging & eco info
@@ -50,6 +53,21 @@ export async function getProductData(barcode) {
       // Media
       image: product.image_front_url,
       ingredients: product.ingredients_text || 'Not available',
+
+      // Ingredient concerns analysis
+      ingredientConcerns: (() => {
+        const ingredientsTags = product.ingredients_tags;
+        console.log('RAW ingredients_tags:', ingredientsTags);
+
+        if (!ingredientsTags || !Array.isArray(ingredientsTags) || ingredientsTags.length === 0) {
+          console.log('No ingredients_tags found or invalid format');
+          return [];
+        }
+
+        const concerns = analyzeIngredientConcerns(ingredientsTags);
+        console.log('ANALYZED concerns:', concerns);
+        return concerns;
+      })(),
 
       // Metadata
       created: product.created_t,
@@ -184,7 +202,7 @@ export async function findSustainableAlternatives(productData, limit = 5) {
     console.log(`🤖 Requesting AI alternatives for: "${productData.name}"`);
 
     // Call the AI endpoint first
-    const response = await fetch('http://localhost:3001/api/alternatives/ai', {
+    const response = await fetch('/api/alternatives/ai', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -367,4 +385,64 @@ function analyzeBenefits(current, alternative) {
 function gradeBetter(gradeA, gradeB) {
   const grades = { 'a': 5, 'b': 4, 'c': 3, 'd': 2, 'e': 1 };
   return (grades[gradeB?.toLowerCase()] || 0) > (grades[gradeA?.toLowerCase()] || 0);
+}
+
+// Analyze ingredients for concerning components
+function analyzeIngredientConcerns(ingredientsTags = []) {
+  const concerns = [];
+
+  // Simple keyword matching - if tag contains these words, flag it
+  const harmfulIngredients = [
+    // Palm oil and variants
+    { keyword: 'palm', category: 'Palm Oil', severity: 'high', icon:'🌴' , description: 'Palm oil contributes to deforestation' },
+
+    // MSG and flavor enhancers
+    { keyword: 'artificial', category: 'MSG', severity: 'medium', icon: '🧪', description: 'Artificial Flavouring' },
+    { keyword: 'acidity', category: 'Flavor Enhancers', severity: 'medium', icon: '🧪', description: 'Acidity Regulators' },
+    { keyword: 'e627', category: 'Flavor Enhancers', severity: 'medium', icon: '🧪', description: 'Disodium guanylate flavor enhancer' },
+
+    // Artificial colors (E100-199 range)
+    { keyword: '150d', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Artificial food color E150d (continued in E101-E199)' },
+    { keyword: 'e330', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'e330 - Citric Acid' },
+    { keyword: 'e508', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'e508 - Gelling agent' },
+    { keyword: 'e375', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Sunset Yellow (E110) - artificial orange color' },
+    { keyword: 'e122', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Carmoisine (E122) - artificial red color' },
+    { keyword: 'e123', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Amaranth (E123) - artificial red color' },
+    { keyword: 'e124', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Ponceau 4R (E124) - artificial red color' },
+    { keyword: 'e127', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Erythrosine (E127) - artificial red color' },
+    { keyword: 'e129', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Allura Red (E129) - artificial red color' },
+    { keyword: 'e130', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Indigotine (E130) - artificial blue color' },
+    { keyword: 'tartrazine', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Yellow 5 artificial color' },
+    { keyword: 'sunset', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Sunset Yellow artificial color' },
+    { keyword: 'ponceau', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Ponceau red artificial color' },
+    { keyword: 'allura', category: 'Artificial Colors', severity: 'medium', icon: '🎨', description: 'Allura Red artificial color' },
+
+    // Trans fats
+    { keyword: 'hydrogenated', category: 'Trans Fats', severity: 'high', icon: '🚫', description: 'Hydrogenated oils may contain trans fats' },
+    { keyword: 'partially', category: 'Trans Fats', severity: 'high', icon: '🚫', description: 'Partially hydrogenated oils contain trans fats' }
+  ];
+
+  // Check each ingredient tag
+  ingredientsTags.forEach(tag => {
+    // Remove language prefixes (en:, fr:, etc.)
+    const cleanTag = tag.toLowerCase().replace(/^[a-z]{2}:/i, '');
+
+    harmfulIngredients.forEach(ingredient => {
+      if (cleanTag.includes(ingredient.keyword.toLowerCase())) {
+        // Only add if not already in concerns (avoid duplicates)
+        const existing = concerns.find(c => c.category === ingredient.category);
+        if (!existing) {
+          concerns.push({
+            category: ingredient.category,
+            severity: ingredient.severity,
+            icon: ingredient.icon,
+            description: ingredient.description,
+            detected: cleanTag
+          });
+        }
+      }
+    });
+  });
+
+  return concerns;
 }

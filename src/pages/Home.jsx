@@ -1,58 +1,173 @@
 import { useRef, useState, useEffect } from 'react';
 import { Html5QrcodeScanner } from 'html5-qrcode';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { getTransportationEmissions } from '../services/carbonInterface.js'
 import { getProductData, findSustainableAlternatives } from '../services/openFoodFacts.js'
 import { enhanceOffDataWithBarcodeOrigin } from '../services/barcodeLookup.js'
 import { analyzePackagingImpact } from '../services/packagingImpact.js'
+import { Camera, Ban, Leaf } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import BottomNav from '../components/bottomNav.jsx';
+import {LoadingBouncingBoxes1, LoadingBouncingBoxes2, LoadingBouncingBoxes3, LoadingTextMorph1, LoadingTextMorph2, LoadingTextMorph3, LoadingGeometric1, LoadingGeometric2, LoadingGeometric3} from '../components/loaders.jsx'
 
 function RecentlyScannedProducts({ products, onSelectProduct }) {
+  // Define animation variants locally
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
+  };
+
   if (!products || products.length === 0) {
     return (
-      <div className="p-8 text-center bg-yellow-300 border-4 border-black m-4" style={{ boxShadow: '8px 8px 0px #000' }}>
-        <div className="text-6xl mb-4">📦</div>
-        <p className="text-xl font-black uppercase tracking-tight">Scanned products will appear here</p>
-      </div>
+      <motion.div
+        className="p-8 text-center bg-yellow-300 border-4 border-black m-4"
+        style={{ boxShadow: '8px 8px 0px #000' }}
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <motion.div
+          className="text-6xl mb-4"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.4, delay: 0.4, type: "spring", stiffness: 200 }}
+        >
+          📦
+        </motion.div>
+        <motion.p
+          className="text-xl font-black uppercase tracking-tight"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.6 }}
+        >
+          Scanned products will appear here
+        </motion.p>
+      </motion.div>
     );
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20, x: -10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      x: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 25
+      }
+    }
+  };
+
   return (
-    <div className="p-6 bg-cyan-400 border-4 border-black m-4" style={{ boxShadow: '12px 12px 0px #000' }}>
-      <h2 className="text-3xl font-black uppercase mb-6 -rotate-1 bg-white border-4 border-black inline-block px-4 py-2" style={{ boxShadow: '6px 6px 0px #000' }}>
+    <motion.div
+      className="p-6 bg-cyan-400 border-4 border-black m-4"
+      style={{ boxShadow: '12px 12px 0px #000' }}
+      variants={sectionVariants}
+      initial="hidden"
+      animate="visible"
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <motion.h2
+        className="text-3xl font-black uppercase mb-6 -rotate-1 bg-white border-4 border-black inline-block px-4 py-2"
+        style={{ boxShadow: '6px 6px 0px #000' }}
+        initial={{ opacity: 0, rotate: -5, x: -10 }}
+        animate={{ opacity: 1, rotate: -1, x: 0 }}
+        transition={{ duration: 0.6, delay: 0.4 }}
+      >
         Recently Scanned
-      </h2>
-      <div className="space-y-4 mt-6">
+      </motion.h2>
+
+      <motion.div
+        className="space-y-4 mt-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {products.slice(0, 5).map((product, index) => (
-          <div
+          <motion.div
             key={index}
+            variants={itemVariants}
             onClick={() => onSelectProduct(product)}
             className="bg-white p-5 border-4 border-black cursor-pointer hover:translate-x-1 hover:translate-y-1 transition-transform"
             style={{ boxShadow: '6px 6px 0px #000' }}
+            whileHover={{
+              x: 4,
+              y: -4,
+              transition: { duration: 0.2 }
+            }}
+            whileTap={{ scale: 0.98 }}
           >
             <div className="flex items-center gap-4">
               {product.image && (
-                <img
+                <motion.img
                   src={product.image}
                   alt={product.name}
                   className="w-16 h-16 object-cover border-3 border-black flex-shrink-0"
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
                 />
               )}
               <div className="flex-1 min-w-0">
-                <h3 className="font-black text-lg uppercase truncate">{product.name}</h3>
-                <p className="font-bold text-sm mt-1">Nutri-Score: {product.nutriscore_score || 'N/A'}</p>
+                <motion.h3
+                  className="font-black text-lg uppercase truncate"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
+                  {product.name}
+                </motion.h3>
+                <motion.p
+                  className="font-bold text-sm mt-1"
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.3 }}
+                >
+                  Nutri-Score: {product.ecoScore || 'N/A'}
+                </motion.p>
               </div>
-              <span className="text-4xl font-black">→</span>
+              <motion.span
+                className="text-4xl font-black"
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.4, type: "spring" }}
+                whileHover={{ scale: 1.2, rotate: 10 }}
+              >
+                →
+              </motion.span>
             </div>
-          </div>
+          </motion.div>
         ))}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }
 
 function Home() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const { user, isAuthenticated } = useAuth();
 
   const [recentProducts, setRecentProducts] = useState([]);
 
@@ -201,16 +316,21 @@ function Home() {
         name: enhancedData.name,
         ingredients: enhancedData.ingredients,
         ecoScore: enhancedData.nutriscore_score,
+        nutriGrade:enhancedData.nutriscore_grade,
         packaging: enhancedData.packaging,
         image: enhancedData.image,
         nutrients: enhancedData.nutrients,
         nutrientsData: enhancedData.nutrientsData,
+        ingredientConcerns: enhancedData.ingredientConcerns,
         transportation: transportationEmissions,
         origin: enhancedData.inferred_origin,
         completeness: enhancedData.completeness,
         packaging_impact: packagingImpact,
         alternatives: alternatives
       };
+
+      console.log('HOME: productInfo.ingredientConcerns:', productInfo.ingredientConcerns);
+      console.log('HOME: full productInfo:', productInfo);
 
       handleScanComplete(productInfo);
 
@@ -232,117 +352,216 @@ function Home() {
     // console.warn(`Code scan error = ${error}`);
   };
 
-  const isActive = (path) => location.pathname === path;
+  // Weekly eco tips - rotate based on week number
+  const getWeeklyEcoTip = () => {
+    const tips = [
+      "🌍 Buy local produce to reduce transportation emissions by up to 90%!",
+      "♻️ Choose products with recycled packaging - glass beats plastic every time!",
+      "🥗 Foods with no or minimal packaging are always the most sustainable choice!",
+      "🛒 Plan your meals to avoid food waste - up to 30% of food is thrown away globally!",
+      "💧 Check water usage - some crops use 100x more water than others!",
+      "🌱 Products in season don't need long transport - they're fresher too!",
+      "📦 Think before you buy - single-use plastics take 500+ years to decompose!"
+    ];
+
+    const weekStart = new Date(2024, 0, 1); // Start of 2024 for consistent rotation
+    const today = new Date();
+    const weekNumber = Math.floor((today - weekStart) / (1000 * 60 * 60 * 24 * 7));
+
+    return tips[weekNumber % tips.length];
+  };
+
+  // Animation variants for smooth entrances
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        duration: 0.4,
+        ease: "easeOut"
+      }
+    }
+  };
+
+  const sectionVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      }
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-red-700 p-4 flex flex-col">
+    <motion.div
+      className="min-h-screen bg-red-700 p-4 flex flex-col relative"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Loading State */}
+      {loading && (
+        <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-50" onClick={() => {}}>
+          <LoadingGeometric2 />
+        </div>
+      )}
+
       {/* Header - Made Smaller */}
-      <div className="bg-lime-300 border-4 border-black p-4 mb-6 -rotate-1" style={{ boxShadow: '8px 8px 0px #000' }}>
+      <motion.div
+        className="bg-green-500 border-4 border-black p-4 mb-6 -rotate-1"
+        style={{ boxShadow: '8px 8px 0px #000' }}
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 0.6, delay: 0.1 }}
+      >
         <h1 className="text-3xl font-black uppercase text-center mb-1 tracking-tight rotate-1 flex items-center justify-center gap-2">
-          <span className="text-3xl">🌱</span>
-          SustainScan
+          <span className="text-3xl"><Leaf size={40} /></span>
+          Eco-Dex
         </h1>
         <p className="text-center text-sm font-black uppercase tracking-wide">Make conscious choices</p>
-      </div>
+      </motion.div>
 
-      <div className="max-w-md mx-auto bg-white border-4 border-black rotate-1 flex-1 flex flex-col" style={{ boxShadow: '16px 16px 0px #000' }}>
+      <motion.div
+        className="max-w-md mx-auto bg-white border-4 border-black rotate-1 flex-1 flex flex-col"
+        style={{ boxShadow: '16px 12px 0px #000' }}
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
         {/* Scan Controls */}
-        <div className="p-6 bg-yellow-300 border-b-4 border-black">
+        <motion.div
+          className="p-6 bg-yellow-300 border-b-4 border-black"
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
           <div className="flex gap-4 justify-center flex-wrap">
-            <button
+            <motion.button
               onClick={startScanning}
               disabled={isScanning.current}
               className="bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-8 py-4 border-4 border-black font-black uppercase text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
               style={{ boxShadow: '6px 6px 0px #000' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <span className="text-2xl">📷</span> Scan
-            </button>
-            <button
+              <span className="text-2xl "><Camera  size={42}/></span> Scan
+            </motion.button>
+            <motion.button
               onClick={stopScanning}
               className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 border-4 border-black font-black uppercase text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
               style={{ boxShadow: '6px 6px 0px #000' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <span className="text-2xl">⏹️</span> Stop
-            </button>
+              <span className="text-2xl "><Ban size={42} /></span> Stop
+            </motion.button>
           </div>
-        </div>
+        </motion.div>
 
         {/* Scanner Area */}
-        <div className="p-8 bg-blue-300 border-b-4 border-black">
+        <motion.div
+          className="p-8 bg-blue-300 border-b-4 border-black"
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 0.5, delay: 0.6 }}
+        >
           <div
             id="reader"
             className="w-full max-w-sm mx-auto bg-white border-4 border-black p-6"
             style={{ boxShadow: '8px 8px 0px #000' }}
           ></div>
-        </div>
-
-        {/* Loading State */}
-        {loading && (
-          <div className="p-8 text-center bg-blue-300 border-b-4 border-black">
-            <div className="text-6xl mb-4 animate-bounce">🔍</div>
-            <div className="bg-black text-white px-6 py-3 border-4 border-black inline-block font-black uppercase text-xl mb-4" style={{ boxShadow: '6px 6px 0px #fff' }}>
-              Analyzing...
-            </div>
-            <div className="w-full bg-white border-4 border-black h-8" style={{ boxShadow: '4px 4px 0px #000' }}>
-              <div className="bg-black h-full animate-pulse" style={{ width: '75%' }}></div>
-            </div>
-          </div>
-        )}
+        </motion.div>
 
         {/* Error State */}
         {error && (
-          <div className="p-8 bg-red-300 border-b-4 border-black">
+          <motion.div
+            className="p-8 bg-red-300 border-b-4 border-black"
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 0.4, delay: 0.5 }}
+          >
             <div className="bg-white border-4 border-black px-6 py-6 text-center" style={{ boxShadow: '8px 8px 0px #000' }}>
               <div className="text-6xl mb-4">⚠️</div>
               <p className="font-black uppercase text-lg">{error}</p>
             </div>
-          </div>
+          </motion.div>
         )}
 
+        {/* Auth Status Indicator */}
+        <motion.div
+          className="px-6 py-2 bg-purple-400 border-b-4 border-black"
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          transition={{ duration: 0.4, delay: error ? 0.7 : 0.6 }}
+        >
+          <div className="text-center">
+            <p className="text-sm font-black uppercase text-white bg-black inline-block px-3 py-1 -rotate-1">
+              {isAuthenticated
+                ? `👋 Hi, ${user?.email?.split('@')[0] || 'Eco Warrior'}!`
+                : '👤 Guest Mode - Login for Favourites!'
+              }
+            </p>
+          </div>
+        </motion.div>
+
         {/* Recently Scanned Products */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pb-32">
+          {/* Weekly Eco Tip */}
+          <motion.div
+            className="p-4 bg-lime-400 border-4 border-black m-4 -rotate-1"
+            style={{ boxShadow: '10px 10px 0px #000' }}
+            variants={sectionVariants}
+            initial="hidden"
+            animate="visible"
+            transition={{ duration: 0.5, delay: error ? 0.9 : 0.8 }}
+          >
+            <div className="text-center">
+              <motion.span
+                initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{
+                  duration: 0.6,
+                  delay: error ? 1.2 : 1.0,
+                  type: "spring",
+                  stiffness: 200,
+                  damping: 15
+                }}
+              >
+                💡
+              </motion.span>
+              <motion.p
+                className="text-lg font-black uppercase text-black leading-tight"
+                initial={{ opacity: 0, y: 15, scaleX: 0.95 }}
+                animate={{ opacity: 1, y: 0, scaleX: 1 }}
+                transition={{
+                  duration: 0.7,
+                  delay: error ? 1.4 : 1.2,
+                  ease: "easeOut"
+                }}
+              >
+                {getWeeklyEcoTip()}
+              </motion.p>
+            </div>
+          </motion.div>
+
           <RecentlyScannedProducts products={recentProducts} onSelectProduct={handleSelectProduct} />
+          {console.log('Recent products:', recentProducts)}
         </div>
 
-        {/* Bottom Navigation - Inside White Div */}
-        <nav className="bg-black border-t-4 border-black mt-auto">
-          <div className="flex justify-around items-center p-2">
-            <button
-              onClick={() => navigate('/')}
-              className={`flex flex-col items-center justify-center px-4 py-2 border-2 border-black font-black uppercase text-xs transition-transform hover:-translate-y-0.5 ${
-                isActive('/') ? 'bg-lime-300' : 'bg-white'
-              }`}
-              style={{ boxShadow: '3px 3px 0px #000' }}
-            >
-              <span className="text-lg mb-0.5">🏠</span>
-              <span>Home</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/history')}
-              className={`flex flex-col items-center justify-center px-4 py-2 border-2 border-black font-black uppercase text-xs transition-transform hover:-translate-y-0.5 ${
-                isActive('/history') ? 'bg-cyan-400' : 'bg-white'
-              }`}
-              style={{ boxShadow: '3px 3px 0px #000' }}
-            >
-              <span className="text-lg mb-0.5">📋</span>
-              <span>History</span>
-            </button>
-
-            <button
-              onClick={() => navigate('/profile')}
-              className={`flex flex-col items-center justify-center px-4 py-2 border-2 border-black font-black uppercase text-xs transition-transform hover:-translate-y-0.5 ${
-                isActive('/profile') ? 'bg-yellow-300' : 'bg-white'
-              }`}
-              style={{ boxShadow: '3px 3px 0px #000' }}
-            >
-              <span className="text-lg mb-0.5">👤</span>
-              <span>Profile</span>
-            </button>
-          </div>
-        </nav>
-      </div>
-    </div>
+      </motion.div>
+      <BottomNav />
+    </motion.div>
   );
 }
 
