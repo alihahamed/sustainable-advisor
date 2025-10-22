@@ -323,153 +323,90 @@ app.post('/api/alternatives/ai', async (req, res) => {
       });
     }
 
-    
+    console.log('🤖 Calling Gemini AI for alternatives...');
 
-    // Check if Gemini API key is configured
-    const geminiKey = process.env.GEMINI_API_KEY;
-    console.log('🔑 Gemini API key check:', {
-      keyExists: !!geminiKey,
-      keyValue: geminiKey,
-      isPlaceholder: geminiKey === 'your_google_ai_api_key_here',
-      keyLength: geminiKey?.length
-    });
+    let aiError = null;
+    let formattedAlternatives = null;
 
-    if (!geminiKey || geminiKey === 'your_google_ai_api_key_here') {
-      console.log('🤖 Gemini API key not configured, using OFF fallback');
-      // Fallback to OFF search
-      try {
-        const offAlternatives = await getOFFAlternatives(productData);
-        return res.json({
-          success: true,
-          source: 'OFF',
-          alternatives: offAlternatives,
-          note: 'Gemini API key not configured - using database search'
-        });
-      } catch (offError) {
-        return res.status(500).json({
-          success: false,
-          error: 'Gemini API key not set and OFF fallback failed',
-          details: 'Configure GEMINI_API_KEY in backend/.env file'
-        });
-      }
+    try {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: `You are a sustainability expert. Find 4-6 sustainable alternatives for ${productData.name} that are nutritionally better. The alternatives brand should be based on what a customer in a supermarket would be able to find. The brand should be primarily indian. In the alternatives give the brand name as well as the product name. Return the packaging type of the product that you're suggesting (eg: 'plastic', 'paper', 'glass' etc. Keep it a single word). The nutrients should be in this format particularly fat: high, salt: low, sugar: high, saturated-fat:high and give the ingredients too, packaging that you are gonna give should be better than ${productData.nutrients}, ${productData.ingredients}, ${productData.packaging}. Also Return vegan products`,
+        config: {
+          thinkingConfig: {
+            thinkingBudget: 1024,
+          },
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.ARRAY,
+            items: {
+              type: Type.OBJECT,
+              properties: {
+                nutrients: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.STRING,
+                  },
+                },
+                ingredients: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.STRING,
+                  },
+                },
+                alternatives: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.STRING,
+                  },
+                },
+                packaging: {
+                  type: Type.STRING,
+                },
+                vegan: {
+                  type: Type.BOOLEAN,
+                }
+              },
+              propertyOrdering: ["alternatives", "nutrients", "ingredients", "packaging", "vegan"],
+            },
+          },
+        },
+      });
+
+      const result = response.text.replace(/```json\n?|\n?```/g, '');
+      const cleanResult = JSON.parse(result);
+      console.log('Response', cleanResult);
+
+      formattedAlternatives = cleanResult.map((item, index) => {
+        const fullName = item.alternatives[0]; // "Brand: Product Name"
+        const [brand, ...productParts] = fullName.split(':');
+
+        return {
+          code: `ai_${Date.now()}_${index}`,
+          product_name: productParts.join(':').trim() || fullName,
+          brand: brand.trim(),
+          nutrients: item.nutrients,
+          ingredients: item.ingredients,
+          packaging: item.packaging,
+          vegan: item.vegan,
+          nutriscore_grade: 'b',
+          improvement_score: 5 + (item.packaging === 'glass' ? 2 : 0),
+          image_front_url: null
+        };
+      });
+    } catch (error) {
+      aiError = error;
+      console.error('❌ Gemini AI failed:', error.message);
     }
 
-    // Try Gemini AI first
-    try {
-      console.log('🤖 Calling Gemini AI for alternatives...');
+    console.log(formattedAlternatives)
 
-      async function main() {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents:
-      `You are a sustainability expert. Find 4-6 sustainable alternatives for ${productData.name} that are nutritionally better. The alternatives brand should be based on what a customer in a supermarket would be able to find. The brand should be primaryily indian. In the alternatives give the brand name as well as the product name. Return the packaging type of the product that you're suggesting (eg: 'plastic', 'paper', 'glass' etc. Keep it a single word). The nutrients should be in this format particularly fat: high, salt: low, sugar: high, saturated-fat:high and give the ingredients too,packaging that you are gonna give should be better than ${productData.nutrients}, ${productData.ingredients},${productData.packaging}. Also Return vegan products`,
-    config: {
-       thinkingConfig: {
-        thinkingBudget: 1024,
-        // Turn off thinking:
-        // thinkingBudget: 0
-        // Turn on dynamic thinking:
-        // thinkingBudget: -1
-      },
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.ARRAY,
-        items: {
-          type: Type.OBJECT,
-          properties: {
-            nutrients: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-            ingredients: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-            alternatives: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.STRING,
-              },
-            },
-            packaging: {
-              type: Type.STRING,
-            },
-            vegan: {
-              type: Type.STRING,
-            }
-          },
-          propertyOrdering: ["alternatives","nutrients", "ingredients", "packaging", "vegan"],
-        },
-      },
-    },
-  });
-
-  
-  const result = response.text.replace(/```json\n?|\n?```/g, '');
-  const cleanResult =  JSON.parse(result)
-  console.log('Response', cleanResult)
-  const alternatives = cleanResult.map(item => item.alternatives);
-console.log('alternatives', alternatives);
-
-const nutrients = cleanResult.map(item => item.nutrients);
-console.log('nutrients',nutrients);
-
-const ingredients = cleanResult.map(item => item.ingredients);
-console.log('ingredients', ingredients);
-
-
-const packaging = cleanResult.packaging
-console.log('packaging', packaging);
-
-}
-
-main();
-
-      
-
-      // const response = await ai.models.generateContent({
-      //   model: "gemini-1.5-flash",
-      //   contents: `You are a sustainability expert. Find 4-6 sustainable alternatives for ${productData.name} that are nutritionally better. Return JSON: {"alternatives": [{"name":"", "brand":"","nutriscore_grade":"", "benefits":[]}]}}`,
-      //   generationConfig: {
-      //     responseMimeType: "application/json"
-      //   }
-      // });
-
-      // const result = await response.response;
-      // const cleanJson = result.text().replace(/```json\n?|\n?```/g, '');
-
-      // const aiResult = JSON.parse(cleanJson);
-
-      // if (aiResult.alternatives && aiResult.alternatives.length > 0) {
-      //   console.log(`🤖 Gemini AI found ${aiResult.alternatives.length} sustainable alternatives`);
-
-        // Format the AI response to match our frontend structure
-        const formattedAlternatives = aiResult.alternatives.map(alt => ({
-          code: alt.barcode || `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          product_name: alt.name,
-          brand: alt.brand || '',
-          nutriscore_grade: alt.nutriscore_grade?.toLowerCase() || 'b',
-          nutriscore_score: 0, // AI doesn't provide actual scores
-          improvement_score: alt.improvement_score || Math.random() * 10,
-          benefits: alt.benefits || [],
-          is_organic: alt.name?.toLowerCase().includes('organic') || false,
-          is_fair_trade: alt.name?.toLowerCase().includes('fair') || false,
-          // Add image placeholder
-          image_front_url: null
-        }));
-
-        return res.json({
-          success: true,
-          source: 'AI',
-          alternatives: formattedAlternatives
-        });
-      }
-    } catch (aiError) {
-      console.error('🤖 Gemini AI failed:', aiError.message);
+    if (formattedAlternatives) {
+      return res.json({
+        success: true,
+        source: 'AI',
+        alternatives: formattedAlternatives
+      });
     }
 
     // Fallback to OFF search if AI fails

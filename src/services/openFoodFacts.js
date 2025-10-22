@@ -20,7 +20,9 @@ export async function getProductData(barcode) {
 
     const product = data.product;
 
-    return {
+    console.log('product.nutriments:', product.nutriments);
+
+    const result = {
       // Basic info
       code: product.code,
       name: product.product_name || 'Unknown Product',
@@ -32,6 +34,14 @@ export async function getProductData(barcode) {
       nutriscore_score: product.nutriscore_score,
       nutriscore_grade: product.nutriscore_grade,
       nutrients: product.nutrient_levels,
+      nutrientsData: {
+        energy: product.nutriments?.['energy-kcal'],
+        sodium: product.nutriments?.sodium,
+        salt: product.nutriments?.salt,
+        proteins: product.nutriments?.proteins,
+        fat: product.nutriments?.fat,
+        carbohydrates: product.nutriments?.carbohydrates,
+      },
 
       // Packaging & eco info
       packaging: product.packaging || 'Not specified',
@@ -52,6 +62,9 @@ export async function getProductData(barcode) {
       // Extraction helpers
       weight_kg: extractProductWeight(product),
     };
+
+    console.log('returning:', result);
+    return result;
 
   } catch (error) {
     console.error('Open Food Facts API Error:', error);
