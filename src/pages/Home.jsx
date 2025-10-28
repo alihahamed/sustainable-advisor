@@ -6,6 +6,7 @@ import { getTransportationEmissions } from '../services/carbonInterface.js'
 import { getProductData, findSustainableAlternatives } from '../services/openFoodFacts.js'
 import { enhanceOffDataWithBarcodeOrigin } from '../services/barcodeLookup.js'
 import { analyzePackagingImpact } from '../services/packagingImpact.js'
+import { challengeActions } from '../services/challengesService.js'
 import { Camera, Ban, Leaf } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import BottomNav from '../components/bottomNav.jsx';
@@ -304,12 +305,17 @@ function Home() {
 
       const packagingImpact = analyzePackagingImpact(enhancedData.packaging);
 
-      let alternatives = [];
+      let alternativesResponse = null;
       try {
-        alternatives = await findSustainableAlternatives(enhancedData);
+        alternativesResponse = await findSustainableAlternatives(enhancedData);
       } catch (altError) {
         console.warn('Failed to find alternatives:', altError);
       }
+
+      // Extract data from response object
+      const alternativesArray = alternativesResponse?.alternatives || [];
+      const mealSuggestions = alternativesResponse?.mealSuggestions || [];
+      const hasHighProtein = alternativesResponse?.hasHighProtein || false;
 
       const productInfo = {
         code: enhancedData.code,
@@ -326,11 +332,14 @@ function Home() {
         origin: enhancedData.inferred_origin,
         completeness: enhancedData.completeness,
         packaging_impact: packagingImpact,
-        alternatives: alternatives
+        alternatives: alternativesArray,
+        mealSuggestions: mealSuggestions,
+        hasHighProtein: hasHighProtein
       };
 
       console.log('HOME: productInfo.ingredientConcerns:', productInfo.ingredientConcerns);
       console.log('HOME: full productInfo:', productInfo);
+      
 
       handleScanComplete(productInfo);
 
@@ -342,8 +351,14 @@ function Home() {
     }
   };
 
-  const onScanSuccess = (decodedText, decodedResult) => {
+  const onScanSuccess = async (decodedText, decodedResult) => {
     console.log(`Code scanned = ${decodedText}`, decodedResult);
+
+    // Track scan challenge progress for logged in users
+    if (user?.id) {
+      await challengeActions.onScan(user.id);
+    }
+
     stopScanning();
     fetchProductInfo(decodedText);
   };

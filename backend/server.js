@@ -323,15 +323,22 @@ app.post('/api/alternatives/ai', async (req, res) => {
       });
     }
 
-    console.log('🤖 Calling Gemini AI for alternatives...');
+  console.log('🤖 Calling Gemini AI for alternatives...');
 
-    let aiError = null;
-    let formattedAlternatives = null;
+  let aiError = null;
+  let formattedAlternatives = null;
+  let mealSuggestions = [];
+  let hasHighProtein = false;
 
     try {
       const response = await ai.models.generateContent({
         model: "gemini-2.5-flash",
-        contents: `You are a sustainability expert. Find 4-5 sustainable alternatives for ${productData.name} that are nutritionally better. The alternatives brand should be based on what a customer in a supermarket would be able to find. The brand should be primarily indian. In the alternatives give the brand name as well as the product name. Return the packaging type of the product that you're suggesting (eg: 'plastic', 'paper', 'glass' etc. Keep it a single word). The nutrients should be in this format particularly fat: high, salt: low, sugar: high, saturated-fat:high and give the ingredients too, packaging that you are gonna give should be better than ${productData.nutrients}, ${productData.ingredients}, ${productData.packaging}. Also Return vegan products
+        contents: `You are a sustainability expert. Find 3 sustainable alternatives for ${productData.name} that are nutritionally better. The alternatives brand should be based on what a customer in a supermarket would be able to find. The brand should be primarily indian. In the alternatives give the brand name as well as the product name. Return the packaging type of the product that you're suggesting (eg: 'plastic', 'paper', 'glass' etc. Keep it a single word).
+
+        Also, ALWAYS suggest 4 simple meal names that can be made using "${productData.name}" as a key ingredient, regardless of what the product is. Also return the protein amount of each of the recipe.
+
+        The nutrients should be in this format particularly fat: high, salt: low, sugar: high, saturated-fat:high and give the ingredients too, packaging that you are gonna give should be better than ${productData.nutrients}, ${productData.ingredients}, ${productData.packaging}. Also Return vegan products.
+
         Also give a nutriscore grade based on the sustainability of the product you are suggesting.
         `,
         config: {
@@ -370,48 +377,103 @@ app.post('/api/alternatives/ai', async (req, res) => {
                 },
                 nutriscore_grade: {
                   type: Type.STRING,
+                },
+                meal_suggestions: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.STRING,
+                  },
+                },
+                protein: {
+                  type: Type.STRING,
                 }
               },
-              propertyOrdering: ["alternatives", "nutrients", "ingredients", "packaging", "vegan", "nutriscore_grade"],
+              propertyOrdering: ["alternatives", "nutrients", "ingredients", "packaging", "vegan", "nutriscore_grade", "meal_suggestions", "protein"],
             },
           },
         },
       });
 
       const result = response.text.replace(/```json\n?|\n?```/g, '');
-      const cleanResult = JSON.parse(result);
-      console.log('Response', cleanResult);
+
+      let cleanResult;
+      try {
+        cleanResult = JSON.parse(result);
+        console.log('✅ Successfully parsed Gemini response:', cleanResult);
+
+        // Validate response structure
+        if (!Array.isArray(cleanResult) || cleanResult.length === 0) {
+          console.error('❌ Invalid Gemini response structure - not an array or empty');
+          throw new Error('Invalid response structure from Gemini');
+        }
+
+        // Check if any item has the expected properties
+        const hasValidItems = cleanResult.some(item =>
+          item &&
+          ((item.alternatives && Array.isArray(item.alternatives)) ||
+           (item.meal_suggestions && Array.isArray(item.meal_suggestions)))
+        );
+
+        if (!hasValidItems) {
+          console.error('❌ None of the items have expected properties (alternatives, meal_suggestions)');
+          throw new Error('Invalid item structure from Gemini');
+        }
+
+      } catch (parseError) {
+        console.error('❌ JSON parsing failed or invalid structure:', parseError.message);
+        console.error('Raw result:', result.substring(0, 500));
+        throw new Error(`Gemini response parsing failed: ${parseError.message}`);
+      }
 
       formattedAlternatives = cleanResult.map((item, index) => {
-        const fullName = item.alternatives[0]; // "Brand: Product Name"
-        const [brand, ...productParts] = fullName.split(':');
+        // Get the alternative product name (Gemini often gives us brand + product together)
+        const product_name = item?.alternatives?.[0] || `Alternative ${index + 1}`;
+
+        console.log('🔍 Alternative', index, ':', product_name);
 
         return {
           code: `ai_${Date.now()}_${index}`,
-          product_name: productParts.join(':').trim() || fullName,
-          brand: brand.trim(),
-          nutrients: item.nutrients,
-          ingredients: item.ingredients,
-          packaging: item.packaging,
-          vegan: item.vegan,
-          nutriscore_grade: item.nutriscore_grade,
-          improvement_score: 5 + (item.packaging === 'glass' ? 2 : 0),
+          product_name: product_name,
+          brand: '', // We'll determine brand later or use full name
+          nutrients: item?.nutrients || [],
+          ingredients: item?.ingredients || [],
+          packaging: item?.packaging || 'unknown',
+          vegan: item?.vegan || false,
+          nutriscore_grade: item?.nutriscore_grade || 'c',
+          improvement_score: 5 + ((item?.packaging === 'glass') ? 2 : 0),
           image_front_url: null
         };
       });
+
+      // Extract meal suggestions and protein indicator from first result
+      mealSuggestions = cleanResult[0]?.meal_suggestions || [];
+      hasHighProtein = cleanResult[0]?.protein || false;
     } catch (error) {
       aiError = error;
       console.error('❌ Gemini AI failed:', error.message);
     }
 
-    console.log(formattedAlternatives)
+    console.log("formatted alternatives",formattedAlternatives)
+    console.log("suggestions:", mealSuggestions)
+    console.log("protein", hasHighProtein)
 
     if (formattedAlternatives) {
-      return res.json({
+      const response = {
         success: true,
         source: 'AI',
-        alternatives: formattedAlternatives
+        alternatives: formattedAlternatives,
+        mealSuggestions: mealSuggestions,
+        hasHighProtein: hasHighProtein
+      };
+
+      console.log('📤 Returning AI response to frontend:', {
+        source: response.source,
+        alternativesCount: response.alternatives?.length || 0,
+        mealSuggestions: response.mealSuggestions,
+        hasHighProtein: response.hasHighProtein
       });
+
+      return res.json(response);
     }
 
     // Fallback to OFF search if AI fails
@@ -419,11 +481,22 @@ app.post('/api/alternatives/ai', async (req, res) => {
     try {
       const offAlternatives = await getOFFAlternatives(productData);
 
-      return res.json({
+      const response = {
         success: true,
         source: 'OFF',
-        alternatives: offAlternatives
+        alternatives: offAlternatives,
+        mealSuggestions: [],  // Fallback since OFF doesn't provide meal suggestions
+        hasHighProtein: false  // Fallback since OFF doesn't provide protein data
+      };
+
+      console.log('📤 Returning OFF fallback to frontend:', {
+        source: response.source,
+        alternativesCount: response.alternatives?.length || 0,
+        mealSuggestions: response.mealSuggestions,
+        hasHighProtein: response.hasHighProtein
       });
+
+      return res.json(response);
     } catch (offError) {
       console.error('OFF fallback also failed:', offError.message);
       return res.status(500).json({

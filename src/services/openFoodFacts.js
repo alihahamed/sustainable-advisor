@@ -221,7 +221,7 @@ export async function findSustainableAlternatives(productData, limit = 5) {
 
     if (data.success && data.alternatives) {
       console.log(`🎯 Found ${data.alternatives.length} ${data.source === 'AI' ? 'AI-generated' : 'database'} sustainable alternatives`);
-      return data.alternatives.slice(0, limit);
+      return data; // Return full response object including mealSuggestions and hasHighProtein
     }
 
     throw new Error(data.error || 'Unknown error from alternatives API');
@@ -302,7 +302,14 @@ async function findSustainableAlternativesOFF(productData, limit = 5) {
       .slice(0, limit);
 
     console.log(`Found ${scoredAlternatives.length} OFF database alternatives for ${productData.name}`);
-    return scoredAlternatives;
+    // Return consistent structure with AI response
+    return {
+      success: true,
+      source: 'OFF',
+      alternatives: scoredAlternatives,
+      mealSuggestions: [], // Fallback doesn't provide meal suggestions
+      hasHighProtein: false // Fallback doesn't provide protein data
+    };
 
   } catch (error) {
     console.error('OFF Alternatives search failed:', error);

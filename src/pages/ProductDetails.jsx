@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, useScroll, useInView } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { contributeMissingData, assessDataCompleteness, validateContributionData } from '../services/offContribute.js';
 import { addToFavourites, isFavourite } from '../services/favouritesService.js';
+import { challengeActions } from '../services/challengesService.js';
+import { useAuth } from '../contexts/AuthContext.jsx';
 import Toast from '../components/Toast.jsx';
 import { Leaf, Sprout, Package, Bus, Map, Banana, ChartColumn, Candy, Carrot, Apple } from 'lucide-react';
 import BottomNav from '../components/bottomNav.jsx';
@@ -311,27 +313,28 @@ function DataContributionForm({ productData, onContribute, contributionData, onD
 function ProductDetails() {
   const navigate = useNavigate();
   const { state } = useLocation();
+  const { user } = useAuth();
   const productInfo = state?.productInfo;
   const [contributionData, setContributionData] = useState({});
   const [contributionLoading, setContributionLoading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
-
-  // Individual animation controls for each section
-  const fadeInVariant = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
-    }
-  };
+  const [showMealSuggestions, setShowMealSuggestions] = useState(false);
 
   if (!productInfo) {
     return <div className="p-8 text-center">No product selected</div>;
   }
 
-  console.log('productInfo:', productInfo);
-  console.log('nutrientsData:', productInfo?.nutrientsData);
+  console.log('★★★★★★ FULL productInfo received:', JSON.stringify(productInfo, null, 2));
+  console.log('mealSuggestions specifically:', productInfo.mealSuggestions);
+  console.log('hasHighProtein specifically:', productInfo.hasHighProtein);
+  console.log('alternatives:', productInfo?.alternatives);
+
+  if (productInfo?.mealSuggestions?.length > 0) {
+    console.log('📣 ALERT: Meal suggestions FOUND and should DISPLAY');
+  } else {
+    console.log('❌ ALERT: No meal suggestions (empty array or missing)');
+  }
+
 
   const handleContribute = async (data) => {
     try {
@@ -345,6 +348,11 @@ function ProductDetails() {
       const result = await contributeMissingData(productInfo.code, data);
       setContributionData({});
       alert(result.message);
+
+      // Track challenge progress for logged in users
+      if (user?.id) {
+        await challengeActions.onContribution(user.id);
+      }
     } catch (error) {
       alert('Submission failed: ' + error.message);
     } finally {
@@ -424,7 +432,7 @@ function ProductDetails() {
                 <h2 className="text-2xl font-black uppercase text-center tracking-tight">{productInfo.name}</h2>
               </div>
               <button
-                onClick={() => {
+                onClick={async () => {
                   if (isFavourite(productInfo.code)) {
                     setToast({ show: true, message: 'Already in favourites! 💖', type: 'success' });
                   } else {
@@ -434,6 +442,12 @@ function ProductDetails() {
                       ...productInfo,
                       ecoScore: calculatedEcoScore
                     });
+
+                    // Track challenge progress for logged in users
+                    if (user?.id) {
+                      await challengeActions.onFavourite(user.id);
+                    }
+
                     setToast({ show: true, message: 'Added to favourites! 💖', type: 'success' });
                   }
                 }}
@@ -660,6 +674,82 @@ function ProductDetails() {
                   )
                 ))}
               </div>
+            </motion.div>
+          )}
+
+          {/* Show Meal Suggestions Button */}
+          {productInfo.mealSuggestions && productInfo.mealSuggestions.length > 0 && !showMealSuggestions && (
+            <motion.button
+              onClick={() => setShowMealSuggestions(true)}
+              className="w-full bg-green-500 text-black py-4 px-6 border-4 border-black font-black uppercase text-lg tracking-tight transform hover:-translate-y-1 transition-transform mb-4"
+              style={{ boxShadow: '6px 6px 0px #000' }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: 1.9 }}
+            >
+               SHOW MEAL IDEAS 🍽️
+            </motion.button>
+          )}
+
+          {/* Meal Suggestions */}
+          {productInfo.mealSuggestions && productInfo.mealSuggestions.length > 0 && showMealSuggestions && (
+            <motion.div
+              className="bg-green-400 border-4 border-black p-6 m-4 -rotate-1 relative"
+              style={{ boxShadow: '12px 12px 0px #000' }}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: "easeOut", delay: 2.0 }}
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setShowMealSuggestions(false)}
+                className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white border-3 border-black w-8 h-8 flex items-center justify-center font-black text-lg rounded-full transition-transform hover:scale-110"
+                style={{ boxShadow: '4px 4px 0px #000' }}
+              >
+                ×
+              </button>
+
+              <motion.h2
+                className="text-3xl font-black uppercase mb-6 bg-white border-4 border-black inline-block px-4 py-2 rotate-1"
+                style={{ boxShadow: '6px 6px 0px #000' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut", delay: 2.1 }}
+              >
+                🍽️ Meal Ideas
+              </motion.h2>
+
+              <motion.p
+                className="mb-4 font-black text-sm uppercase bg-white border-2 border-black p-3"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut", delay: 2.2 }}
+              >
+                {productInfo.hasHighProtein ? '🚀 High Protein - Great for muscle building!' : '🥗 Delicious recipes using this ingredient!'}
+              </motion.p>
+
+              <motion.div
+                className="bg-white border-4 border-black p-4"
+                style={{ boxShadow: '6px 6px 0px #000' }}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut", delay: 2.3 }}
+              >
+                <ul className="space-y-2">
+                  {productInfo.mealSuggestions.map((meal, index) => (
+                    <motion.li
+                      key={index}
+                      className="flex items-center gap-3 font-black text-lg uppercase"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, ease: "easeOut", delay: 2.4 + (index * 0.1) }}
+                    >
+                      <span className="text-2xl">🍛</span>
+                      <span>{meal}</span>
+                    </motion.li>
+                  ))}
+                </ul>
+              </motion.div>
             </motion.div>
           )}
 
