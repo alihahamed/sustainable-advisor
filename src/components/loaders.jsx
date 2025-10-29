@@ -203,7 +203,7 @@ function LoadingGeometric1() {
       </div>
       <style>{`
         @keyframes flip {
-          0%, 100% { transform: rotateY(0deg); background-color: #c084fc; }
+          0%, 100% { transform: rotateY(0deg); background-color:#9333ea ; }
           50% { transform: rotateY(180deg); background-color: #facc15; }
         }
       `}</style>

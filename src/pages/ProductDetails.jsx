@@ -6,7 +6,7 @@ import { addToFavourites, isFavourite } from '../services/favouritesService.js';
 import { challengeActions } from '../services/challengesService.js';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import Toast from '../components/Toast.jsx';
-import { Leaf, Sprout, Package, Bus, Map, Banana, ChartColumn, Candy, Carrot, Apple } from 'lucide-react';
+import { Heart,Leaf, Sprout, Package, Bus, Map, Banana, ChartColumn, Candy, Carrot, Apple } from 'lucide-react';
 import BottomNav from '../components/bottomNav.jsx';
 
 
@@ -421,7 +421,7 @@ function ProductDetails() {
 
           {/* Product Title and Favourite Button */}
           <motion.div
-            className="bg-cyan-400 border-4 border-black p-4 mb-6 -rotate-1"
+            className="bg-blue-500 border-4 border-black p-4 mb-6 -rotate-1"
             style={{ boxShadow: '6px 6px 0px #000' }}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -451,7 +451,7 @@ function ProductDetails() {
                     setToast({ show: true, message: 'Added to favourites! 💖', type: 'success' });
                   }
                 }}
-                className="bg-pink-500 border-4 border-black px-4 py-2 font-black text-sm uppercase hover:scale-105 transition-transform rotate-1"
+                className="bg-pink-300 border-4 border-black px-4 py-2 font-black text-sm uppercase hover:scale-105 transition-transform rotate-1"
                 style={{ boxShadow: '4px 4px 0px #000' }}
               >
                 {isFavourite(productInfo.code) ? '❤️ Added' : '♡ Add Favourite'}
@@ -681,7 +681,7 @@ function ProductDetails() {
           {productInfo.mealSuggestions && productInfo.mealSuggestions.length > 0 && !showMealSuggestions && (
             <motion.button
               onClick={() => setShowMealSuggestions(true)}
-              className="w-full bg-green-500 text-black py-4 px-6 border-4 border-black font-black uppercase text-lg tracking-tight transform hover:-translate-y-1 transition-transform mb-4"
+              className="w-full bg-gray-600 text-white py-4 px-6 border-4 border-black font-black uppercase text-lg tracking-tight transform hover:-translate-y-1 transition-transform mb-4"
               style={{ boxShadow: '6px 6px 0px #000' }}
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}

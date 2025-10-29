@@ -7,7 +7,7 @@ import { getProductData, findSustainableAlternatives } from '../services/openFoo
 import { enhanceOffDataWithBarcodeOrigin } from '../services/barcodeLookup.js'
 import { analyzePackagingImpact } from '../services/packagingImpact.js'
 import { challengeActions } from '../services/challengesService.js'
-import { Camera, Ban, Leaf, Flower, Earth, Bug, Tractor, Sprout } from 'lucide-react';
+import { Barcode,Camera, Ban, Leaf, Flower, Earth, Bug, Tractor, Sprout } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import BottomNav from '../components/bottomNav.jsx';
 import {LoadingBouncingBoxes1, LoadingBouncingBoxes2, LoadingBouncingBoxes3, LoadingTextMorph1, LoadingTextMorph2, LoadingTextMorph3, LoadingGeometric1, LoadingGeometric2, LoadingGeometric3} from '../components/loaders.jsx'
@@ -497,7 +497,7 @@ function Home() {
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <span className="text-2xl "><Camera  size={42}/></span> Scan
+              <span className="text-2xl"><Barcode className='text-center' size={42}/></span> Scan
             </motion.button>
             <motion.button
               onClick={stopScanning}
@@ -514,7 +514,7 @@ function Home() {
 
         {/* Scanner Area */}
         <motion.div
-          className="p-8 bg-blue-300 border-b-4 border-black"
+          className="p-8 bg-blue-400 border-b-4 border-black"
           variants={sectionVariants}
           initial="hidden"
           animate="visible"
@@ -545,7 +545,7 @@ function Home() {
 
         {/* Auth Status Indicator with Profile */}
         <motion.div
-          className="px-6 py-2 bg-purple-400 border-b-4 border-black"
+          className="px-6 py-2 bg-purple-600 border-b-4 border-black"
           variants={sectionVariants}
           initial="hidden"
           animate="visible"
@@ -580,7 +580,7 @@ function Home() {
         <div className="flex-1 overflow-y-auto pb-32">
           {/* Weekly Eco Tip */}
           <motion.div
-            className="p-4 bg-lime-400 border-4 border-black m-4 -rotate-1"
+            className="p-4 bg-lime-400 border-4 border-black m-4 mb-8 -rotate-1"
             style={{ boxShadow: '10px 10px 0px #000' }}
             variants={sectionVariants}
             initial="hidden"
@@ -588,7 +588,7 @@ function Home() {
             transition={{ duration: 0.5, delay: error ? 0.9 : 0.8 }}
           >
             <div className="text-center">
-              <motion.span
+              {/* <motion.span
                 initial={{ scale: 0.8, opacity: 0, rotate: -10 }}
                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
                 transition={{
@@ -600,7 +600,7 @@ function Home() {
                 }}
               >
                 💡
-              </motion.span>
+              </motion.span> */}
               <motion.p
                 className="text-lg font-black uppercase text-black leading-tight"
                 initial={{ opacity: 0, y: 15, scaleX: 0.95 }}
