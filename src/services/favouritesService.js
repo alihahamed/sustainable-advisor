@@ -13,14 +13,8 @@ export const getFavourites = () => {
 export const addToFavourites = (product) => {
   try {
     const favourites = getFavourites();
-    favourites[product.code] = {
-      code: product.code,
-      name: product.name,
-      image: product.image,
-      ecoScore: product.ecoScore,
-      brand: product.brand || '',
-      addedAt: new Date().toISOString()
-    };
+    // Store the ENTIRE product object for comparison features
+    favourites[product.code] = product;
     localStorage.setItem('favouriteProducts', JSON.stringify(favourites));
     return true;
   } catch (error) {

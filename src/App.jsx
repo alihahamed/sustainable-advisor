@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import Home from './pages/Home.jsx';
 import ProductDetails from './pages/ProductDetails.jsx';
+import CompareProducts from './pages/CompareProducts.jsx';
 import Favourites from './pages/Favourites.jsx';
 import LoginRegister from './pages/LoginRegister.jsx';
 import Profile from './pages/Profile.jsx';
@@ -55,6 +56,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/product" element={<ProductDetails />} />
+        <Route path="/compare" element={<CompareProducts />} />
         <Route path="/favourites" element={
           <ProtectedRoute>
             <Favourites />

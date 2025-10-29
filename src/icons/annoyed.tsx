@@ -42,7 +42,7 @@ const eyeVariants: Variants = {
     transition: {
       duration: 0.2,
       ease: "easeInOut",
-      repeat: 1,
+      repeat: 5,
     },
   },
 };

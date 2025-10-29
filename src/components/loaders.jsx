@@ -183,13 +183,13 @@ function LoadingTextMorph3() {
 // Variation 1: Grid Flip
 function LoadingGeometric1() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-lime-200 to-pink-200">
+    <div className="flex items-center justify-center min-h-screen bg-transparent">
       <div>
         <div className="grid grid-cols-3 gap-3">
           {[...Array(9)].map((_, i) => (
             <div
               key={i}
-              className="w-16 h-16 bg-purple-400 border-4 border-black"
+              className="w-16 h-16 bg-purple-500 border-4 border-black"
               style={{
                 boxShadow: '4px 4px 0px #000',
                 animation: `flip 1.5s ease-in-out ${i * 0.1}s infinite`
@@ -245,9 +245,9 @@ function LoadingGeometric2() {
 // Variation 3: Diagonal Bars
 function LoadingGeometric3() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-200 to-blue-200">
+    <div className="flex items-center justify-center min-h-screen bg-transparent">
       <div className="flex flex-col items-center gap-6">
-        <div className="relative w-48 h-48 overflow-hidden border-4 border-black bg-white" style={{ boxShadow: '10px 10px 0px #000' }}>
+        <div className="relative w-42 h-42   overflow-hidden border-4 border-black bg-white" style={{ boxShadow: '10px 10px 0px #000' }}>
           {[0, 1, 2, 3, 4].map((i) => (
             <div
               key={i}

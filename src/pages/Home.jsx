@@ -7,7 +7,7 @@ import { getProductData, findSustainableAlternatives } from '../services/openFoo
 import { enhanceOffDataWithBarcodeOrigin } from '../services/barcodeLookup.js'
 import { analyzePackagingImpact } from '../services/packagingImpact.js'
 import { challengeActions } from '../services/challengesService.js'
-import { Camera, Ban, Leaf } from 'lucide-react';
+import { Camera, Ban, Leaf, Flower, Earth, Bug, Tractor, Sprout } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import BottomNav from '../components/bottomNav.jsx';
 import {LoadingBouncingBoxes1, LoadingBouncingBoxes2, LoadingBouncingBoxes3, LoadingTextMorph1, LoadingTextMorph2, LoadingTextMorph3, LoadingGeometric1, LoadingGeometric2, LoadingGeometric3} from '../components/loaders.jsx'
@@ -171,14 +171,45 @@ function Home() {
   const { user, isAuthenticated } = useAuth();
 
   const [recentProducts, setRecentProducts] = useState([]);
+  const [customName, setCustomName] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('flower');
 
+  // Avatar options for helper function
+  const avatarOptions = [
+    { id: 'tractor', component: <Tractor color='yellow' />, name: 'Eco Farmer' },
+    { id: 'sprout', component: <Sprout color='green' />, name: 'Green Thumb' },
+    { id: 'earth', component: <Earth color='blue'/>, name: 'Earth Guardian' },
+    { id: 'bug', component: <Bug color='red' />, name: 'Buzzing Beecare' },
+    { id: 'flower', component: <Flower color='pink' />, name: 'Blooming Eco' }
+  ];
+
+  // Get the selected avatar component
+  const getSelectedAvatarComponent = () => {
+    const avatar = avatarOptions.find(avatar => avatar.id === selectedAvatar);
+    return avatar ? avatar.component : <Flower color='pink' />;
+  };
+
+  // Load profile settings and recent products from localStorage
   useEffect(() => {
+    // Load recent products
     const saved = localStorage.getItem('recentProducts');
     if (saved) {
       try {
         setRecentProducts(JSON.parse(saved));
       } catch (e) {
         console.warn('Failed to parse recent products:', e);
+      }
+    }
+
+    // Load profile settings
+    const loadedSettings = localStorage.getItem('userProfileSettings');
+    if (loadedSettings) {
+      try {
+        const parsed = JSON.parse(loadedSettings);
+        setCustomName(parsed.name || '');
+        setSelectedAvatar(parsed.avatar || 'flower');
+      } catch (error) {
+        console.error('Error loading profile settings:', error);
       }
     }
   }, []);
@@ -420,7 +451,7 @@ function Home() {
       {/* Loading State */}
       {loading && (
         <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-50" onClick={() => {}}>
-          <LoadingGeometric2 />
+          <LoadingGeometric1 />
         </div>
       )}
 
@@ -512,7 +543,7 @@ function Home() {
           </motion.div>
         )}
 
-        {/* Auth Status Indicator */}
+        {/* Auth Status Indicator with Profile */}
         <motion.div
           className="px-6 py-2 bg-purple-400 border-b-4 border-black"
           variants={sectionVariants}
@@ -520,14 +551,29 @@ function Home() {
           animate="visible"
           transition={{ duration: 0.4, delay: error ? 0.7 : 0.6 }}
         >
-          <div className="text-center">
-            <p className="text-sm font-black uppercase text-white bg-black inline-block px-3 py-1 -rotate-1">
-              {isAuthenticated
-                ? `👋 Hi, ${user?.email?.split('@')[0] || 'Eco Warrior'}!`
-                : '👤 Guest Mode - Login for Favourites!'
-              }
-            </p>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex items-center justify-center">
+              <div className="">
+                {/* <motion.div
+                  className="avatar cursor-pointer hover:scale-110 transition-transform mr-3"
+                  onClick={() => navigate('/profile')}
+                >
+                  <div className="ring-primary ring-offset-base-100 w-10 rounded-full ring-2 ring-offset-1 flex justify-center items-center bg-black">
+                    {getSelectedAvatarComponent()}
+                  </div>
+                </motion.div> */}
+                <p className="text-sm font-black uppercase text-white bg-black inline-block px-3 py-1 -rotate-1">
+                  👋 Hi, {customName || user?.email?.split('@')[0] || 'Eco Warrior'}!
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="text-sm font-black uppercase text-white bg-black inline-block px-3 py-1 -rotate-1">
+                👤 Guest Mode - Login for Favourites!
+              </p>
+            </div>
+          )}
         </motion.div>
 
         {/* Recently Scanned Products */}

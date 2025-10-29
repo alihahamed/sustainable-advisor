@@ -5,8 +5,9 @@ import { motion } from "framer-motion"
 import { ScanHeart } from "../icons/scanHeart"
 import { ScanText } from "../icons/scanText"
 import { User } from "../icons/profile"
-import { LogIn } from "lucide-react"
+import { LogIn, Trophy } from "lucide-react"
 import { Annoyed } from "../icons/annoyed.js"
+import { CheckCheck } from "../icons/check.js"
 
 function BottomNav() {
     const navigate = useNavigate()
@@ -54,7 +55,7 @@ function BottomNav() {
             <div className="flex gap-3 items-center">
               <button
                 onClick={() => navigate('/')}
-                className="flex flex-col items-center justify-center px-5 py-2 border-3 border-black font-black uppercase text-xs transition-transform hover:-translate-y-1 bg-lime-300"
+                className="flex flex-col items-center justify-center px-3 py-2 border-3 border-black font-black uppercase text-xs transition-transform hover:-translate-y-1 bg-lime-300"
                 style={{ boxShadow: '4px 4px 0px #000' }}
               >
                 <span className="text-2xl mb-1"><ScanText/></span>
@@ -62,8 +63,17 @@ function BottomNav() {
               </button>
 
               <button
+                onClick={() => navigate('/compare')}
+                className="flex flex-col items-center justify-center px-3 py-2 border-3 border-black font-black uppercase text-xs transition-transform hover:-translate-y-1 bg-purple-700"
+                style={{ boxShadow: '4px 4px 0px #000' }}
+              >
+                <span className="text-2xl mb-1"><CheckCheck /></span>
+                <span>Compare</span>
+              </button>
+
+              <button
                 onClick={handleFavouritesClick}
-                className="flex flex-col items-center justify-center px-5 py-2 border-3 border-black font-black uppercase text-xs transition-transform hover:-translate-y-1 bg-blue-500"
+                className="flex flex-col items-center justify-center px-3 py-2 border-3 border-black font-black uppercase text-xs transition-transform hover:-translate-y-1 bg-blue-500"
                 style={{ boxShadow: '4px 4px 0px #000' }}
               >
                 <span className="text-2xl mb-1"><ScanHeart /></span>

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext.jsx';
 import { User, Mail, LogOut, Settings, Heart, Star, Trophy } from 'lucide-react';
 import { fetchUserChallenges, getUserStats } from '../services/challengesService.js';
 import BottomNav from '../components/bottomNav.jsx';
+import {Flower, Earth,Bug,Tractor, Sprout} from 'lucide-react'
 
 function Profile() {
   const { user, signOut, isAuthenticated } = useAuth();
@@ -13,6 +14,26 @@ function Profile() {
   const [challenges, setChallenges] = useState([]);
   const [userStats, setUserStats] = useState(null);
   const [loadingChallenges, setLoadingChallenges] = useState(true);
+
+  // Settings modal and profile customization
+  const [showSettings, setShowSettings] = useState(false);
+  const [customName, setCustomName] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState('flower');
+
+  // Avatar options using DaisyUI container
+  const avatarOptions = [
+    { id: 'tractor', component: <Tractor color='yellow' />, name: 'Eco Farmer' },
+    { id: 'sprout', component: <Sprout color='green' />, name: 'Green Thumb' },
+    { id: 'earth', component: <Earth color='blue'/>, name: 'Earth Guardian' },
+    { id: 'bug', component: <Bug color='red' />, name: 'Buzzing Beecare' },
+    { id: 'flower', component: <Flower color='pink' />, name: 'Blooming Eco' }
+  ];
+
+  // Get the selected avatar component
+  const getSelectedAvatarComponent = () => {
+    const avatar = avatarOptions.find(avatar => avatar.id === selectedAvatar);
+    return avatar ? avatar.component : <Flower color='pink' />;
+  };
 
   // Eco Rank levels with scoring thresholds
   const rankLevels = [
@@ -58,6 +79,29 @@ function Profile() {
       setIsSigningOut(false);
     }
   };
+
+  const handleSaveSettings = () => {
+    const settings = {
+      name: customName.trim() || '',
+      avatar: selectedAvatar
+    };
+    localStorage.setItem('userProfileSettings', JSON.stringify(settings));
+    setShowSettings(false);
+  };
+
+  // Load profile settings from localStorage
+  useEffect(() => {
+    const loadedSettings = localStorage.getItem('userProfileSettings');
+    if (loadedSettings) {
+      try {
+        const parsed = JSON.parse(loadedSettings);
+        setCustomName(parsed.name || '');
+        setSelectedAvatar(parsed.avatar || 'flower');
+      } catch (error) {
+        console.error('Error loading profile settings:', error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const loadProfileData = async () => {
@@ -173,17 +217,20 @@ function Profile() {
           animate="visible"
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <div className="text-center">
-            <motion.div
-              className="w-24 h-24 bg-black rounded-full mx-auto mb-4 border-4 border-black flex items-center justify-center"
-              style={{ boxShadow: '4px 4px 0px #000' }}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.6, type: "spring", stiffness: 200 }}
-              whileHover={{ scale: 1.05 }}
-            >
-              <User size={40} className="text-white" />
-            </motion.div>
+          <div className="text-center flex flex-row justify-center items-center">
+            {/* Custom Avatar using DaisyUI */}
+            <div className="avatar mr-8">
+              <div className="ring-primary ring-offset-base-100 w-24 rounded-full ring-3 ring-offset-2">
+                <div
+                  className="text-4xl bg-black w-full h-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform"
+                  // style={{ background: 'linear-gradient(135deg, #10b981, #22c55e)', borderRadius: '9999px' }}
+                  onClick={() => setShowSettings(true)}
+                >
+
+                  {getSelectedAvatarComponent()}
+                </div>
+              </div>
+            </div>
 
             <motion.h2
               className="text-2xl font-black uppercase bg-white border-2 border-black inline-block px-4 py-2 -rotate-1"
@@ -191,7 +238,7 @@ function Profile() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: 0.7 }}
             >
-              {user?.email?.split('@')[0] || 'Eco Warrior'}
+              {customName || user?.email?.split('@')[0] || 'Eco Warrior'}
             </motion.h2>
           </div>
         </motion.div>
@@ -456,12 +503,13 @@ function Profile() {
             <motion.button
               className="w-full bg-gray-600 text-white border-4 border-black py-3 px-6 font-black uppercase text-lg transition-transform hover:-translate-y-1"
               style={{ boxShadow: '4px 4px 0px #000' }}
+              onClick={() => setShowSettings(true)}
               variants={itemVariants}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               <Settings className="inline-block mr-2 mb-1" size={20} />
-              Settings (Coming Soon)
+              Settings
             </motion.button>
           </motion.div>
         </motion.div>
@@ -493,6 +541,93 @@ function Profile() {
       </motion.div>
 
       <BottomNav />
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <motion.div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setShowSettings(false)}
+        >
+          <motion.div
+            className="bg-white border-4 border-black p-6 w-full max-w-sm mx-4"
+            style={{ boxShadow: '16px 16px 0px #000' }}
+            initial={{ scale: 0.9, y: 20 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-2xl font-black uppercase mb-6 text-center bg-green-400 border-2 border-black inline-block px-3 py-1 -rotate-1">
+              Profile Settings
+            </h3>
+
+            {/* Name Input */}
+            <div className="mb-6">
+              <label className=" font-black uppercase mb-2 bg-black text-white inline-block px-3 py-1 -rotate-1">
+                Display Name
+              </label>
+              <input
+                type="text"
+                className="w-full p-4 border-4 border-black bg-white font-bold text-lg"
+                style={{ boxShadow: '4px 4px 0px #000' }}
+                placeholder={user?.email?.split('@')[0] || 'Eco Warrior'}
+                value={customName}
+                onChange={(e) => setCustomName(e.target.value)}
+                maxLength={20}
+              />
+            </div>
+
+            {/* Avatar Selection */}
+            <div className="mb-6">
+              <label className="block font-black uppercase mb-3 bg-black text-white inline-block px-3 py-1 rotate-1">
+                Choose Avatar
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {avatarOptions.map((avatar) => (
+                  <div
+                    key={avatar.id}
+                    className={`avatar cursor-pointer transition-transform hover:scale-110`}
+                    onClick={() => setSelectedAvatar(avatar.id)}
+                  >
+                    <div className="ring-primary ring-offset-base-100 w-16 rounded-full ring-3 ring-offset-2">
+                      <div
+                        className="text-2xl w-full h-full flex items-center justify-center"
+                        style={{
+                          background: selectedAvatar === avatar.id
+                            ? 'black'
+                            : 'white',
+                          borderRadius: '9999px'
+                        }}
+                      >
+                        {avatar.component}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowSettings(false)}
+                className="flex-1 bg-gray-500 text-white py-3 px-4 border-4 border-black font-black uppercase text-sm transition-transform hover:-translate-y-1"
+                style={{ boxShadow: '4px 4px 0px #000' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveSettings}
+                className="flex-1 bg-green-500 text-white py-3 px-4 border-4 border-black font-black uppercase text-sm transition-transform hover:-translate-y-1"
+                style={{ boxShadow: '4px 4px 0px #000' }}
+              >
+                Save
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }
