@@ -189,7 +189,7 @@ function LoadingGeometric1() {
           {[...Array(9)].map((_, i) => (
             <div
               key={i}
-              className="w-16 h-16 bg-purple-500 border-4 border-black"
+              className="w-10 h-10 bg-purple-600 border-4 border-black"
               style={{
                 boxShadow: '4px 4px 0px #000',
                 animation: `flip 1.5s ease-in-out ${i * 0.1}s infinite`
@@ -203,7 +203,7 @@ function LoadingGeometric1() {
       </div>
       <style>{`
         @keyframes flip {
-          0%, 100% { transform: rotateY(0deg); background-color:#9333ea ; }
+          0%, 100% { transform: rotateY(0deg); background-color:red ; }
           50% { transform: rotateY(180deg); background-color: #facc15; }
         }
       `}</style>
