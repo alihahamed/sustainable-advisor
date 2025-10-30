@@ -1,12 +1,12 @@
 // Variation 1: Triple Bounce
 function LoadingBouncingBoxes1() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-yellow-200 to-pink-200">
+    <div className="flex items-center justify-center min-h-screen bg-transparent">
       <div className="flex gap-4">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
-            className="w-16 h-16 bg-cyan-400 border-4 border-black"
+            className="w-13 h-13 bg-blue-500 border-4 border-black"
             style={{
               boxShadow: '6px 6px 0px #000',
               animation: `bounce 1s ease-in-out ${i * 0.2}s infinite`

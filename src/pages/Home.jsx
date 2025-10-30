@@ -451,7 +451,7 @@ function Home() {
       {/* Loading State */}
       {loading && (
         <div className="absolute inset-0 backdrop-blur-md z-50" onClick={() => {}}>
-          <LoadingGeometric1 />
+          <LoadingBouncingBoxes1 />
         </div>
       )}
 
