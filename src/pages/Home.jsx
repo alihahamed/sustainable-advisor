@@ -443,14 +443,14 @@ function Home() {
 
   return (
     <motion.div
-      className="min-h-screen bg-red-700 p-4 flex flex-col relative"
+      className="min-h-screen bg-red-500 p-4 flex flex-col relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Loading State */}
       {loading && (
-        <div className="absolute inset-0 backdrop-blur-md flex items-center justify-center z-50" onClick={() => {}}>
+        <div className="absolute inset-0 backdrop-blur-md z-50" onClick={() => {}}>
           <LoadingGeometric1 />
         </div>
       )}
