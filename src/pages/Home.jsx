@@ -452,7 +452,7 @@ function Home() {
 
   return (
     <motion.div
-      className="min-h-screen bg-red-500 p-2 sm:p-4 flex flex-col relative"
+      className="min-h-screen bg-yellow-200 p-2 sm:p-4 flex flex-col relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
