@@ -29,15 +29,15 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
   if (!products || products.length === 0) {
     return (
       <motion.div
-        className="p-8 text-center bg-yellow-300 border-4 border-black m-4"
-        style={{ boxShadow: '8px 8px 0px #000' }}
+        className="p-4 sm:p-8 text-center bg-yellow-300 border-2 sm:border-4 border-black m-2 sm:m-4"
+        style={{ boxShadow: '4px 4px 0px #000' }}
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <motion.div
-          className="text-6xl mb-4"
+          className="text-4xl sm:text-6xl mb-4"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.4, type: "spring", stiffness: 200 }}
@@ -45,7 +45,7 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
           📦
         </motion.div>
         <motion.p
-          className="text-xl font-black uppercase tracking-tight"
+          className="text-lg sm:text-xl font-black uppercase tracking-tight"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.6 }}
@@ -83,16 +83,16 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
 
   return (
     <motion.div
-      className="p-6 bg-cyan-400 border-4 border-black m-4"
-      style={{ boxShadow: '12px 12px 0px #000' }}
+      className="p-3 sm:p-6 bg-cyan-400 border-2 sm:border-4 border-black m-2 sm:m-4"
+      style={{ boxShadow: '6px 6px 0px #000' }}
       variants={sectionVariants}
       initial="hidden"
       animate="visible"
       transition={{ duration: 0.5, delay: 0.2 }}
     >
       <motion.h2
-        className="text-3xl font-black uppercase mb-6 -rotate-1 bg-white border-4 border-black inline-block px-4 py-2"
-        style={{ boxShadow: '6px 6px 0px #000' }}
+        className="text-2xl sm:text-3xl font-black uppercase mb-4 sm:mb-6 -rotate-1 bg-white border-2 sm:border-4 border-black inline-block px-3 sm:px-4 py-2"
+        style={{ boxShadow: '3px 3px 0px #000' }}
         initial={{ opacity: 0, rotate: -5, x: -10 }}
         animate={{ opacity: 1, rotate: -1, x: 0 }}
         transition={{ duration: 0.6, delay: 0.4 }}
@@ -101,7 +101,7 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
       </motion.h2>
 
       <motion.div
-        className="space-y-4 mt-6"
+        className="space-y-3 sm:space-y-4 mt-4 sm:mt-6"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -111,8 +111,8 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
             key={index}
             variants={itemVariants}
             onClick={() => onSelectProduct(product)}
-            className="bg-white p-5 border-4 border-black cursor-pointer hover:translate-x-1 hover:translate-y-1 transition-transform"
-            style={{ boxShadow: '6px 6px 0px #000' }}
+            className="bg-white p-3 sm:p-5 border-2 sm:border-4 border-black cursor-pointer hover:translate-x-1 hover:translate-y-1 transition-transform"
+            style={{ boxShadow: '3px 3px 0px #000' }}
             whileHover={{
               x: 4,
               y: -4,
@@ -120,12 +120,12 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
             }}
             whileTap={{ scale: 0.98 }}
           >
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               {product.image && (
                 <motion.img
                   src={product.image}
                   alt={product.name}
-                  className="w-16 h-16 object-cover border-3 border-black flex-shrink-0"
+                  className="w-12 h-12 sm:w-16 sm:h-16 object-cover border-2 sm:border-3 border-black flex-shrink-0"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ duration: 0.3, delay: 0.1 }}
@@ -133,7 +133,7 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
               )}
               <div className="flex-1 min-w-0">
                 <motion.h3
-                  className="font-black text-lg uppercase truncate"
+                  className="font-black text-base sm:text-lg uppercase truncate"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.2 }}
@@ -141,7 +141,7 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
                   {product.name}
                 </motion.h3>
                 <motion.p
-                  className="font-bold text-sm mt-1"
+                  className="font-bold text-xs sm:text-sm mt-1"
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ duration: 0.3, delay: 0.3 }}
@@ -150,7 +150,7 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
                 </motion.p>
               </div>
               <motion.span
-                className="text-4xl font-black"
+                className="text-2xl sm:text-4xl font-black"
                 initial={{ opacity: 0, scale: 0.5 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.4, type: "spring" }}
@@ -236,30 +236,39 @@ function Home() {
     setTimeout(() => {
       const readerElement = document.getElementById('reader');
       if (readerElement) {
+        const isMobile = window.innerWidth < 640;
+        const borderWidth = isMobile ? '2px' : '4px';
+        const shadowSize = isMobile ? '4px 4px 0px #000' : '8px 8px 0px #000';
+        const padding = isMobile ? '0.75rem' : '1rem';
+        const containerWidth = isMobile ? '240px' : '280px';
+        const containerHeight = isMobile ? '280px' : '350px';
+        const canvasSize = isMobile ? '200px' : '240px';
+        const scanRegionSize = isMobile ? '160px' : '200px';
+
         readerElement.style.backgroundColor = '#fff';
-        readerElement.style.border = '4px solid #000';
-        readerElement.style.padding = '1rem';
-        readerElement.style.width = '280px';
-        readerElement.style.height = '350px';
+        readerElement.style.border = `${borderWidth} solid #000`;
+        readerElement.style.padding = padding;
+        readerElement.style.width = containerWidth;
+        readerElement.style.height = containerHeight;
         readerElement.style.display = 'flex';
         readerElement.style.flexDirection = 'column';
         readerElement.style.justifyContent = 'center';
-        readerElement.style.boxShadow = '8px 8px 0px #000';
+        readerElement.style.boxShadow = shadowSize;
 
         const canvas = readerElement.querySelector('video, canvas');
         if (canvas) {
-          canvas.style.border = '4px solid #000';
+          canvas.style.border = `${borderWidth} solid #000`;
           canvas.style.boxShadow = 'none';
-          canvas.style.width = '240px';
-          canvas.style.height = '240px';
+          canvas.style.width = canvasSize;
+          canvas.style.height = canvasSize;
           canvas.style.objectFit = 'cover';
         }
 
         const scanRegion = readerElement.querySelector('#reader__scan_region');
         if (scanRegion) {
           scanRegion.style.backgroundColor = '#fff';
-          scanRegion.style.width = '200px';
-          scanRegion.style.height = '200px';
+          scanRegion.style.width = scanRegionSize;
+          scanRegion.style.height = scanRegionSize;
         }
 
         const buttons = readerElement.querySelectorAll('button');
@@ -443,7 +452,7 @@ function Home() {
 
   return (
     <motion.div
-      className="min-h-screen bg-red-500 p-4 flex flex-col relative"
+      className="min-h-screen bg-red-500 p-2 sm:p-4 flex flex-col relative"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
@@ -457,23 +466,23 @@ function Home() {
 
       {/* Header - Made Smaller */}
       <motion.div
-        className="bg-green-500 border-4 border-black p-4 mb-6 -rotate-1"
-        style={{ boxShadow: '8px 8px 0px #000' }}
+        className="bg-green-500 border-2 sm:border-4 border-black p-2 sm:p-4 mb-4 sm:mb-6 -rotate-1"
+        style={{ boxShadow: '4px 4px 0px #000' }}
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
         transition={{ duration: 0.6, delay: 0.1 }}
       >
-        <h1 className="text-3xl font-black uppercase text-center mb-1 tracking-tight rotate-1 flex items-center justify-center gap-2">
-          <span className="text-3xl"><Leaf size={40} /></span>
+        <h1 className="text-2xl sm:text-3xl font-black uppercase text-center mb-1 tracking-tight rotate-1 flex items-center justify-center gap-2">
+          <span className="text-2xl sm:text-3xl"><Leaf size={32} className="sm:w-10 sm:h-10" /></span>
           Eco-Dex
         </h1>
-        <p className="text-center text-sm font-black uppercase tracking-wide">Make conscious choices</p>
+        <p className="text-center text-xs sm:text-sm font-black uppercase tracking-wide">Make conscious choices</p>
       </motion.div>
 
       <motion.div
-        className="max-w-md mx-auto bg-white border-4 border-black rotate-1 flex-1 flex flex-col"
-        style={{ boxShadow: '16px 12px 0px #000' }}
+        className="max-w-sm sm:max-w-md mx-auto bg-white border-2 sm:border-4 border-black flex-1 flex flex-col"
+        style={{ boxShadow: '8px 6px 0px #000' }}
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
@@ -481,40 +490,42 @@ function Home() {
       >
         {/* Scan Controls */}
         <motion.div
-          className="p-6 bg-yellow-300 border-b-4 border-black"
+          className="p-3 sm:p-6 bg-yellow-300 border-b-2 sm:border-b-4 border-black"
           variants={sectionVariants}
           initial="hidden"
           animate="visible"
           transition={{ duration: 0.5, delay: 0.4 }}
         >
-          <div className="flex gap-4 justify-center flex-wrap">
+          <div className="flex gap-2 sm:gap-4 justify-center flex-wrap">
             <motion.button
               onClick={startScanning}
               disabled={isScanning.current}
-              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-8 py-4 border-4 border-black font-black uppercase text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
-              style={{ boxShadow: '6px 6px 0px #000' }}
+              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 sm:px-8 py-2 sm:py-4 border-2 sm:border-4 border-black font-black uppercase text-sm sm:text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
+              style={{ boxShadow: '3px 3px 0px #000' }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <span className="text-2xl"><Barcode className='text-center' size={42}/></span> Scan
+              <span className="text-lg sm:text-2xl"><Barcode size={32} /></span>
+              <span className="block sm:inline ml-0 sm:ml-2">Scan</span>
             </motion.button>
             <motion.button
               onClick={stopScanning}
-              className="bg-red-500 hover:bg-red-600 text-white px-8 py-4 border-4 border-black font-black uppercase text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
-              style={{ boxShadow: '6px 6px 0px #000' }}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 sm:px-8 py-2 sm:py-4 border-2 sm:border-4 border-black font-black uppercase text-sm sm:text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
+              style={{ boxShadow: '3px 3px 0px #000' }}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
-              <span className="text-2xl "><Ban size={42} /></span> Stop
+              <span className="text-lg sm:text-2xl"><Ban size={32} className="sm:w-10 sm:h-10" /></span>
+              <span className="block sm:inline ml-0 sm:ml-2">Stop</span>
             </motion.button>
           </div>
         </motion.div>
 
         {/* Scanner Area */}
         <motion.div
-          className="p-8 bg-blue-400 border-b-4 border-black"
+          className="p-4 sm:p-8 bg-blue-400 border-b-2 sm:border-b-4 border-black"
           variants={sectionVariants}
           initial="hidden"
           animate="visible"
@@ -522,8 +533,8 @@ function Home() {
         >
           <div
             id="reader"
-            className="w-full max-w-sm mx-auto bg-white border-4 border-black p-6"
-            style={{ boxShadow: '8px 8px 0px #000' }}
+            className="w-full max-w-xs sm:max-w-sm mx-auto bg-white border-2 sm:border-4 border-black p-3 sm:p-6"
+            style={{ boxShadow: '4px 4px 0px #000' }}
           ></div>
         </motion.div>
 
@@ -580,8 +591,8 @@ function Home() {
         <div className="flex-1 overflow-y-auto pb-32">
           {/* Weekly Eco Tip */}
           <motion.div
-            className="p-4 bg-lime-400 border-4 border-black m-4 mb-8 -rotate-1"
-            style={{ boxShadow: '10px 10px 0px #000' }}
+            className="p-3 sm:p-4 bg-lime-400 border-2 sm:border-4 border-black m-2 sm:m-4 mb-6 sm:mb-8 -rotate-1"
+            style={{ boxShadow: '5px 5px 0px #000' }}
             variants={sectionVariants}
             initial="hidden"
             animate="visible"
@@ -602,7 +613,7 @@ function Home() {
                 💡
               </motion.span> */}
               <motion.p
-                className="text-lg font-black uppercase text-black leading-tight"
+                className="text-base sm:text-lg font-black uppercase text-black leading-tight"
                 initial={{ opacity: 0, y: 15, scaleX: 0.95 }}
                 animate={{ opacity: 1, y: 0, scaleX: 1 }}
                 transition={{
