@@ -234,11 +234,11 @@ function CompareProducts() {
   };
 
   return (
-    <div className="min-h-screen bg-orange-600 p-4 flex flex-col pb-32">
+    <div className="min-h-screen bg-orange-600 p-2 sm:p-4 flex flex-col pb-32">
       {/* Header */}
       <motion.div
-        className="bg-green-500 border-4 border-black p-4 mb-6 -rotate-1"
-        style={{ boxShadow: '8px 8px 0px #000' }}
+        className="bg-green-500 border-2 sm:border-4 border-black p-2 sm:p-4 mb-4 sm:mb-6 -rotate-1"
+        style={{ boxShadow: '4px 4px 0px #000' }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -251,19 +251,19 @@ function CompareProducts() {
             <ArrowLeft size={24} />
           </button> */}
           <div className="flex-1 text-center">
-            <h1 className="text-3xl font-black uppercase tracking-tight rotate-1 inline-flex items-center justify-center gap-2">
-              <span className="text-3xl"><Trophy size={38} /></span>
+            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight rotate-1 inline-flex items-center justify-center gap-2">
+              <span className=""><Trophy size={32} className='sm:w-10 sm:h-10 inline-block' /></span>
               Compare Products
             </h1>
-            <p className="text-center text-sm font-black uppercase tracking-wide">Find the better choice</p>
+            <p className="text-center text-xs sm:text-sm font-black uppercase tracking-wide">Find the better choice</p>
           </div>
           <div className="w-12"></div>
         </div>
       </motion.div>
 
       <motion.div
-        className="max-w-md mx-auto bg-white border-4 border-black rotate-1 flex-1 flex flex-col"
-        style={{ boxShadow: '16px 16px 0px #000' }}
+        className="max-w-md mx-auto bg-white border-2 sm:border-4 border-black  flex-1 flex flex-col"
+        style={{ boxShadow: '8px 6px 0px #000' }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
@@ -272,27 +272,27 @@ function CompareProducts() {
         {/* Winner Announcement */}
         {winner && comparisonData && (
           <motion.div
-            className="p-4 bg-yellow-300 border-b-4 border-black text-center"
+            className="p-3 sm:p-4 bg-yellow-300 border-b-2 sm:border-b-4 border-black text-center"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
-            <Trophy size={32} className="mx-auto mb-2 text-yellow-600" />
-            <h2 className="font-black text-xl uppercase mb-1">Better Choice:</h2>
-            <p className="font-black text-2xl text-red-600">{winner.name}</p>
-            <p className="text-sm">Won {Math.max(comparisonData.score1, comparisonData.score2)} out of 8 points</p>
+            <Trophy size={28} className="sm:w-8 sm:h-8 mx-auto mb-2 text-yellow-600" />
+            <h2 className="font-black text-lg sm:text-xl uppercase mb-1">Better Choice:</h2>
+            <p className="font-black text-xl sm:text-2xl text-red-600">{winner.name}</p>
+            <p className="text-xs sm:text-sm">Won {Math.max(comparisonData.score1, comparisonData.score2)} out of 8 points</p>
           </motion.div>
         )}
 
         {selectedProducts[0] && selectedProducts[1] && comparisonData ? (
           /* Comparison View */
-          <div className="p-4">
+          <div className="p-3 sm:p-4">
             {/* Side-by-side Product Cards */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
               {/* Product 1 Card */}
               <motion.div
-                className={`bg-cyan-400 border-4 border-black p-4 ${winner === selectedProducts[0] ? 'bg-green-200' : ''}`}
-                style={{ boxShadow: '6px 6px 0px #000' }}
+                className={`bg-cyan-400 border-2 sm:border-4 border-black p-3 sm:p-4 ${winner === selectedProducts[0] ? 'bg-green-200' : ''}`}
+                style={{ boxShadow: '4px 4px 0px #000' }}
                 initial={{ x: -20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.5 }}
@@ -300,51 +300,51 @@ function CompareProducts() {
                 <img
                   src={selectedProducts[0].image}
                   alt={selectedProducts[0].name}
-                  className="w-full h-24 object-cover border-2 border-black mb-3"
+                  className="w-full h-20 sm:h-24 object-cover border-2 sm:border-3 border-black mb-3"
                 />
-                <h3 className="font-black text-sm uppercase mb-2 text-center">{selectedProducts[0].name}</h3>
+                <h3 className="font-black text-xs sm:text-sm uppercase mb-2 text-center">{selectedProducts[0].name}</h3>
 
                 {/* Eco Score */}
-                <div className="bg-white border-2 border-black p-2 mb-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2 mb-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Leaf size={16} />
+                    <Leaf size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">Eco Score</span>
                   </div>
-                  <div className="font-black text-xl text-center">{comparisonData.ecoScore1 || '0'}</div>
+                  <div className="font-black text-lg sm:text-xl text-center">{comparisonData.ecoScore1 || '0'}</div>
                 </div>
 
                 {/* Transport CO2 */}
-                <div className="bg-white border-2 border-black p-2 mb-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2 mb-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Bus size={16} />
+                    <Bus size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">CO₂</span>
                   </div>
-                  <div className="font-black text-lg text-center">{comparisonData.co2_1.toFixed(2)}kg</div>
+                  <div className="font-black text-base sm:text-lg text-center">{comparisonData.co2_1.toFixed(2)}kg</div>
                 </div>
 
                 {/* Recyclability */}
-                <div className="bg-white border-2 border-black p-2 mb-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2 mb-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Recycle size={16} />
+                    <Recycle size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">Recycle</span>
                   </div>
-                  <div className="font-black text-lg text-center">{comparisonData.recycle_1}%</div>
+                  <div className="font-black text-base sm:text-lg text-center">{comparisonData.recycle_1}%</div>
                 </div>
 
                 {/* Nutrients */}
-                <div className="bg-white border-2 border-black p-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Apple size={16} />
+                    <Apple size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">Warnings</span>
                   </div>
-                  <div className="font-black text-lg text-center">{comparisonData.nutrientWarnings1}</div>
+                  <div className="font-black text-base sm:text-lg text-center">{comparisonData.nutrientWarnings1}</div>
                 </div>
               </motion.div>
 
               {/* Product 2 Card */}
               <motion.div
-                className={`bg-cyan-400 border-4 border-black p-4 ${winner === selectedProducts[1] ? 'bg-green-200' : ''}`}
-                style={{ boxShadow: '6px 6px 0px #000' }}
+                className={`bg-cyan-400 border-2 sm:border-4 border-black p-3 sm:p-4 ${winner === selectedProducts[1] ? 'bg-green-200' : ''}`}
+                style={{ boxShadow: '4px 4px 0px #000' }}
                 initial={{ x: 20, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.6 }}
@@ -352,44 +352,44 @@ function CompareProducts() {
                 <img
                   src={selectedProducts[1].image}
                   alt={selectedProducts[1].name}
-                  className="w-full h-24 object-cover border-2 border-black mb-3"
+                  className="w-full h-20 sm:h-24 object-cover border-2 sm:border-3 border-black mb-3"
                 />
-                <h3 className="font-black text-sm uppercase mb-2 text-center">{selectedProducts[1].name}</h3>
+                <h3 className="font-black text-xs sm:text-sm uppercase mb-2 text-center">{selectedProducts[1].name}</h3>
 
                 {/* Eco Score */}
-                <div className="bg-white border-2 border-black p-2 mb-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2 mb-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Leaf size={16} />
+                    <Leaf size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">Eco Score</span>
                   </div>
-                  <div className="font-black text-xl text-center">{comparisonData.ecoScore2 || '0'}</div>
+                  <div className="font-black text-lg sm:text-xl text-center">{comparisonData.ecoScore2 || '0'}</div>
                 </div>
 
                 {/* Transport CO2 */}
-                <div className="bg-white border-2 border-black p-2 mb-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2 mb-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Bus size={16} />
+                    <Bus size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">CO₂</span>
                   </div>
-                  <div className="font-black text-lg text-center">{comparisonData.co2_2.toFixed(2)}kg</div>
+                  <div className="font-black text-base sm:text-lg text-center">{comparisonData.co2_2.toFixed(2)}kg</div>
                 </div>
 
                 {/* Recyclability */}
-                <div className="bg-white border-2 border-black p-2 mb-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2 mb-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Recycle size={16} />
+                    <Recycle size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">Recycle</span>
                   </div>
-                  <div className="font-black text-lg text-center">{comparisonData.recycle_2}%</div>
+                  <div className="font-black text-base sm:text-lg text-center">{comparisonData.recycle_2}%</div>
                 </div>
 
                 {/* Nutrients */}
-                <div className="bg-white border-2 border-black p-2">
+                <div className="bg-white border-2 sm:border-3 border-black p-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Apple size={16} />
+                    <Apple size={14} className="sm:w-4 sm:h-4" />
                     <span className="font-black text-xs uppercase">Warnings</span>
                   </div>
-                  <div className="font-black text-lg text-center">{comparisonData.nutrientWarnings2}</div>
+                  <div className="font-black text-base sm:text-lg text-center">{comparisonData.nutrientWarnings2}</div>
                 </div>
               </motion.div>
             </div>
@@ -397,8 +397,8 @@ function CompareProducts() {
             {/* Reset Button */}
             <motion.button
               onClick={() => setSelectedProducts([null, null])}
-              className="w-full bg-red-500 text-white py-3 px-6 border-4 border-black font-black uppercase text-lg"
-              style={{ boxShadow: '6px 6px 0px #000' }}
+              className="w-full bg-red-500 text-white py-2 sm:py-3 px-4 sm:px-6 border-2 sm:border-4 border-black font-black uppercase text-sm sm:text-lg"
+              style={{ boxShadow: '4px 4px 0px #000' }}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.8 }}
@@ -408,39 +408,39 @@ function CompareProducts() {
           </div>
         ) : (
           /* Selection View */
-          <div className="flex-1 overflow-y-auto p-4">
-            <h2 className="text-2xl font-black uppercase mb-4 text-center">Select Products to Compare</h2>
+          <div className="flex-1 overflow-y-auto p-3 sm:p-4">
+            {/* <h2 className="text-xl sm:text-2xl font-black uppercase mb-3 sm:mb-4 text-center">Select Products to Compare</h2> */}
 
             {/* Selection Cards */}
-            <div className="grid grid-cols-1 gap-4 mb-6">
+            <div className="grid grid-cols-1 gap-3 sm:gap-4 mb-4 sm:mb-6">
               {[0, 1].map((index) => (
                 <motion.div
                   key={index}
-                  className="bg-cyan-400 border-4 border-black p-4"
-                  style={{ boxShadow: '6px 6px 0px #000' }}
+                  className="bg-blue-400 border-2 sm:border-4 border-black p-3 sm:p-4"
+                  style={{ boxShadow: '4px 4px 0px #000' }}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 + (index * 0.1) }}
                 >
                   {!selectedProducts[index] ? (
                     <div className="text-center">
-                      <div className="text-4xl mb-2"><Plus /></div>
-                      <p className="font-black uppercase">Select Product {index + 1}</p>
+                      <div className="text-3xl sm:text-4xl mb-2"><Plus size={32} className="sm:w-10 sm:h-10" /></div>
+                      <p className="font-black uppercase text-sm sm:text-base">Select Product {index + 1}</p>
                     </div>
                   ) : (
                     <div className="flex items-center gap-3">
                       <img
                         src={selectedProducts[index].image}
                         alt={selectedProducts[index].name}
-                        className="w-16 h-16 object-cover border-2 border-black"
+                        className="w-12 h-12 sm:w-16 sm:h-16 object-cover border-2 sm:border-3 border-black"
                       />
                       <div className="flex-1">
-                        <h3 className="font-black text-sm uppercase">{selectedProducts[index].name}</h3>
+                        <h3 className="font-black text-xs sm:text-sm uppercase">{selectedProducts[index].name}</h3>
                         <p className="text-xs">Eco Score: {calculateEcoScore(selectedProducts[index]) || 'N/A'}</p>
                       </div>
                       <button
                         onClick={() => deselectProduct(index)}
-                        className="bg-red-500 text-white px-2 py-1 border-2 border-black text-sm font-black"
+                        className="bg-red-500 text-white px-2 py-1 border-2 border-black text-xs sm:text-sm font-black"
                       >
                         ×
                       </button>
@@ -451,27 +451,27 @@ function CompareProducts() {
             </div>
 
             {/* Recent Products Grid */}
-            <h3 className="text-xl font-black uppercase mb-4 text-center">Recent Products</h3>
+            <h3 className="text-lg sm:text-xl font-black uppercase mb-3 sm:mb-4 text-center">Recent Products</h3>
             {recentProducts.length === 0 ? (
               <motion.div
-                className="bg-yellow-300 border-4 border-black p-4 text-center"
-                style={{ boxShadow: '6px 6px 0px #000' }}
+                className="bg-yellow-300 border-2 sm:border-4 border-black p-3 sm:p-4 text-center"
+                style={{ boxShadow: '4px 4px 0px #000' }}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
               >
-                <p className="font-black uppercase">No products found</p>
-                <p className="text-sm">Scan some products or add to favourites first!</p>
+                <p className="font-black uppercase text-sm sm:text-base">No products found</p>
+                <p className="text-xs sm:text-sm">Scan some products or add to favourites first!</p>
                 <button
                   onClick={() => navigate('/')}
-                  className="mt-3 bg-black text-white px-6 py-2 border-2 border-black font-black uppercase"
+                  className="mt-3 bg-black text-white px-4 sm:px-6 py-2 border-2 border-black font-black uppercase text-sm sm:text-base"
                 >
                   Start Scanning
                 </button>
               </motion.div>
             ) : (
               <motion.div
-                className="grid grid-cols-1 gap-3"
+                className="grid grid-cols-1 gap-3 sm:gap-4"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.6 }}
@@ -479,8 +479,8 @@ function CompareProducts() {
                 {recentProducts.map((product, index) => (
                   <motion.div
                     key={product.code}
-                    className="bg-purple-400 border-4 border-black p-4"
-                    style={{ boxShadow: '6px 6px 0px #000' }}
+                    className="bg-yellow-300 border-2 sm:border-4 border-black p-3 sm:p-4"
+                    style={{ boxShadow: '4px 4px 0px #000' }}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.7 + (index * 0.05) }}
@@ -489,10 +489,10 @@ function CompareProducts() {
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-16 h-16 object-cover border-2 border-black"
+                        className="w-12 h-12 sm:w-16 sm:h-16 object-cover border-2 sm:border-3 border-black"
                       />
                       <div className="flex-1">
-                        <h3 className="font-black text-sm uppercase">{product.name}</h3>
+                        <h3 className="font-black text-xs sm:text-sm uppercase">{product.name}</h3>
                         <p className="text-xs">Eco Score: {calculateEcoScore(product) || 'N/A'}</p>
                       </div>
                       <div className="flex gap-2">
@@ -502,7 +502,7 @@ function CompareProducts() {
                               key={slotIndex}
                               onClick={() => selectProduct(product, slotIndex)}
                               disabled={selectedProducts[slotIndex]?.code === product.code}
-                              className="bg-black text-white px-3 py-1 border-2 border-black text-xs font-black uppercase disabled:opacity-50"
+                              className="bg-black text-white px-2 sm:px-3 py-1 border-2 border-black text-xs font-black uppercase disabled:opacity-50"
                             >
                               {slotIndex + 1}
                             </button>

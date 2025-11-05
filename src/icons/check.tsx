@@ -27,7 +27,7 @@ const checkVariants: Variants = {
 
 const CheckCheck = ({
   width = 24,
-  height = 25,
+  height = 23,
   strokeWidth = 2,
   stroke = "#ffffff",
   ...props

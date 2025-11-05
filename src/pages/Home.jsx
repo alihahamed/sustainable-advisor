@@ -83,7 +83,7 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
 
   return (
     <motion.div
-      className="p-3 sm:p-6 bg-cyan-400 border-2 sm:border-4 border-black m-2 sm:m-4"
+      className="p-3 sm:p-6 bg-cyan-300 border-2 sm:border-4 border-black m-2 sm:m-4"
       style={{ boxShadow: '6px 6px 0px #000' }}
       variants={sectionVariants}
       initial="hidden"
@@ -481,61 +481,48 @@ function Home() {
       </motion.div>
 
       <motion.div
-        className="max-w-sm sm:max-w-md mx-auto bg-white border-2 sm:border-4 border-black flex-1 flex flex-col"
+        className="max-w-md mx-auto bg-white border-2 sm:border-4 border-black flex-1 flex flex-col"
         style={{ boxShadow: '8px 6px 0px #000' }}
         variants={sectionVariants}
         initial="hidden"
         animate="visible"
         transition={{ duration: 0.6, delay: 0.2 }}
       >
-        {/* Scan Controls */}
-        <motion.div
-          className="p-3 sm:p-6 bg-yellow-300 border-b-2 sm:border-b-4 border-black"
-          variants={sectionVariants}
-          initial="hidden"
-          animate="visible"
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <div className="flex gap-2 sm:gap-4 justify-center flex-wrap">
-            <motion.button
-              onClick={startScanning}
-              disabled={isScanning.current}
-              className="bg-black hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed text-white px-4 sm:px-8 py-2 sm:py-4 border-2 sm:border-4 border-black font-black uppercase text-sm sm:text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
-              style={{ boxShadow: '3px 3px 0px #000' }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <span className="text-lg sm:text-2xl"><Barcode size={32} /></span>
-              <span className="block sm:inline ml-0 sm:ml-2">Scan</span>
-            </motion.button>
-            <motion.button
-              onClick={stopScanning}
-              className="bg-red-500 hover:bg-red-600 text-white px-4 sm:px-8 py-2 sm:py-4 border-2 sm:border-4 border-black font-black uppercase text-sm sm:text-lg tracking-tight transform hover:-translate-y-1 transition-transform"
-              style={{ boxShadow: '3px 3px 0px #000' }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            >
-              <span className="text-lg sm:text-2xl"><Ban size={32} className="sm:w-10 sm:h-10" /></span>
-              <span className="block sm:inline ml-0 sm:ml-2">Stop</span>
-            </motion.button>
-          </div>
-        </motion.div>
-
         {/* Scanner Area */}
         <motion.div
           className="p-4 sm:p-8 bg-blue-400 border-b-2 sm:border-b-4 border-black"
           variants={sectionVariants}
           initial="hidden"
           animate="visible"
-          transition={{ duration: 0.5, delay: 0.6 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
         >
           <div
             id="reader"
-            className="w-full max-w-xs sm:max-w-sm mx-auto bg-white border-2 sm:border-4 border-black p-3 sm:p-6"
+            className="w-[260px] max-w-xs sm:max-w-sm mx-auto bg-black border-2 sm:border-4 border-black p-3 sm:p-6 cursor-pointer"
             style={{ boxShadow: '4px 4px 0px #000' }}
-          ></div>
+            onClick={startScanning}
+          >
+            {!isScanning.current && (
+              <div className="flex flex-col items-center justify-center h-full min-h-[190px] sm:min-h-[220px]">
+                
+                <div className="text-4xl mb-4"><Barcode size={50} color='white' /></div>
+                <p className="font-black uppercase text-center text-white">Tap to Scan</p>
+              </div>
+            )}
+          </div>
+          {isScanning.current && (
+            <motion.button
+              onClick={stopScanning}
+              className="bg-red-500 hover:bg-red-600 text-white px-4 sm:px-8 py-2 sm:py-4 border-2 sm:border-4 border-black font-black uppercase text-sm sm:text-lg tracking-tight transform hover:-translate-y-1 transition-transform mt-4 w-full max-w-xs sm:max-w-sm mx-auto block"
+              style={{ boxShadow: '3px 3px 0px #000' }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <span className="text-lg sm:text-2xl"><Ban size={32} className="sm:w-10 sm:h-10" /></span>
+              <span className="block sm:inline ml-0 sm:ml-2">Stop Scanning</span>
+            </motion.button>
+          )}
         </motion.div>
 
         {/* Error State */}
@@ -556,7 +543,7 @@ function Home() {
 
         {/* Auth Status Indicator with Profile */}
         <motion.div
-          className="px-6 py-2 bg-purple-600 border-b-4 border-black"
+          className="px-6 py-2 bg-red-500 border-b-4 border-black"
           variants={sectionVariants}
           initial="hidden"
           animate="visible"
