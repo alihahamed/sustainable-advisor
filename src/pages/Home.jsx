@@ -481,7 +481,7 @@ function Home() {
       </motion.div>
 
       <motion.div
-        className="max-w-md mx-auto bg-white border-2 sm:border-4 border-black flex-1 flex flex-col"
+        className=" bg-white border-2 sm:border-4 border-black flex-1 flex flex-col"
         style={{ boxShadow: '8px 6px 0px #000' }}
         variants={sectionVariants}
         initial="hidden"
