@@ -83,7 +83,7 @@ function RecentlyScannedProducts({ products, onSelectProduct }) {
 
   return (
     <motion.div
-      className="p-3 sm:p-6 bg-cyan-300 border-2 sm:border-4 border-black m-2 sm:m-4"
+      className="p-3 sm:p-6 bg-blue-500 border-2 sm:border-4 border-black m-2 sm:m-4"
       style={{ boxShadow: '6px 6px 0px #000' }}
       variants={sectionVariants}
       initial="hidden"
@@ -552,17 +552,18 @@ function Home() {
           {isAuthenticated ? (
             <div className="flex items-center justify-center">
               <div className="">
-                {/* <motion.div
-                  className="avatar cursor-pointer hover:scale-110 transition-transform mr-3"
-                  onClick={() => navigate('/profile')}
-                >
-                  <div className="ring-primary ring-offset-base-100 w-10 rounded-full ring-2 ring-offset-1 flex justify-center items-center bg-black">
-                    {getSelectedAvatarComponent()}
-                  </div>
-                </motion.div> */}
-                <p className="text-sm font-black uppercase text-white bg-black inline-block px-3 py-1 -rotate-1">
+               
+                <p className="text-sm font-black uppercase text-white bg-black inline-block px-3 py-2">
                   👋 Hi, {customName || user?.email?.split('@')[0] || 'Eco Warrior'}!
                 </p>
+                 <motion.div
+                  className="avatar cursor-pointer hover:scale-110 transition-transform ml-3 mr-3"
+                  onClick={() => navigate('/profile')}
+                >
+                  <div className="ring-primary ring-offset-base-100 w-12 rounded-full ring-2 ring-offset-1 flex justify-center items-center bg-black">
+                    {getSelectedAvatarComponent()}
+                  </div>
+                </motion.div>
               </div>
             </div>
           ) : (
